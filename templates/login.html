@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balnex | Iniciar Sesión</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        .bg-balnex {
+            background: linear-gradient(135deg, #3d5afe 0%, #ff3d77 100%);
+        }
+        
+        .glass-login {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-balnex min-h-screen flex items-center justify-center p-4">
+
+    <div class="glass-login w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden">
+        <div class="p-8 md:p-12">
+            <div class="text-center mb-10">
+                <h1 class="text-4xl font-extrabold tracking-tighter text-[#3d5afe]">
+                    BAL<span class="text-[#ff3d77]">NEX</span>
+                </h1>
+                <p class="text-gray-500 mt-2 font-medium">Bienvenido de nuevo</p>
+            </div>
+
+            <form method="POST" class="space-y-6">
+                {% csrf_token %}
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2 ml-1">Correo Electrónico</label>
+                    <div class="relative">
+                        <i class="fa fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="email" name="correo" required 
+                        class="w-full pl-12 pr-4 py-4 rounded-2xl bg-white border border-gray-100 focus:border-[#3d5afe] focus:ring-4 focus:ring-blue-100 outline-none transition-all"
+                        placeholder="ejemplo@balnex.com">
+                    </div>
+                </div>
+
+<div>
+    <label class="block text-sm font-bold text-gray-700 mb-2 ml-1">Contraseña</label>
+    <div class="relative">
+        <i class="fa fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+        <input type="password" name="password" required 
+            class="w-full pl-12 pr-4 py-4 rounded-2xl bg-white border border-gray-100 focus:border-[#3d5afe] focus:ring-4 focus:ring-blue-100 outline-none transition-all"
+            placeholder="••••••••">
+    </div>
+
+    <div class="text-right mt-2">
+        <a href="#" class="text-xs font-bold text-[#3d5afe] hover:underline">¿Olvidaste tu contraseña?</a>
+    </div>
+</div>
+
+{% if error %}
+<p class="text-red-500 text-sm text-center">{{ error }}</p>
+{% endif %}
+
+<button type="submit" 
+    class="w-full bg-black text-white py-4 rounded-2xl font-bold text-lg hover:bg-gray-800 transition-all shadow-lg active:scale-[0.98]">
+    Entrar
+</button>
+
+</form>
+
+
+            <div class="mt-10 text-center">
+                <p class="text-sm text-gray-500">¿No tienes cuenta? 
+                    <a href="#" class="text-[#ff3d77] font-bold hover:underline">Regístrate gratis</a>
+                </p>
+                
+                <div class="flex items-center my-8 text-gray-300">
+                    <hr class="flex-grow border-gray-200">
+                    <span class="px-4 text-xs font-bold text-gray-400 uppercase">O continúa con</span>
+                    <hr class="flex-grow border-gray-200">
+                </div>
+
+                <div class="flex justify-center gap-4">
+                    <button class="p-4 bg-white rounded-2xl border border-gray-100 hover:bg-gray-50 transition shadow-sm">
+                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-6 h-6" alt="Google">
+                    </button>
+                    <button class="p-4 bg-white rounded-2xl border border-gray-100 hover:bg-gray-50 transition shadow-sm">
+                        <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" class="w-6 h-6" alt="Facebook">
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

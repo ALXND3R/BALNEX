@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mi sitio</title>
+</head>
+<body>
+
+<h1>Mi sitio</h1>
+
+<a href="{% url 'pagina_de_inicio' %}">Inicio</a>
+<a href="{% url 'acerca_de' %}">Acerca de</a>
+
+<hr>
+
+{% block contenido %}
+{% endblock %}
+
+</body>
+</html>
