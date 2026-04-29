@@ -1,13 +1,11 @@
 {% extends 'base.html' %}
 
-{% block title %}Balnex | Iniciar Sesión{% endblock %}
+{% block title %}Balnex | Crear Cuenta{% endblock %}
 
 {% block extra_css %}
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
 
-    /* Nota: Aplicar font-family al body general podría chocar con otras páginas. 
-       Lo ideal es aplicarlo al contenedor principal de esta vista o en tu base.html si será global */
     .font-jakarta {
         font-family: 'Plus Jakarta Sans', sans-serif;
     }
@@ -33,35 +31,24 @@
                 <h1 class="text-4xl font-extrabold tracking-tighter text-[#3d5afe]">
                     BAL<span class="text-[#ff3d77]">NEX</span>
                 </h1>
-                <p class="text-gray-500 mt-2 font-medium">Bienvenido de nuevo</p>
+                <p class="text-gray-500 mt-2 font-medium">Crear cuenta</p>
             </div>
 
-            <form method="POST" class="space-y-6" autocomplete="off">
+            <form method="POST" class="space-y-6" autocomplete="on">
                 {% csrf_token %}
 
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2 ml-1">Correo Electrónico</label>
-                    <div class="relative">
-                        <i class="fa fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                        <input type="email" name="correo" autocomplete="username" value="{{ correo }}" required
-                            class="w-full pl-12 pr-4 py-4 rounded-2xl bg-white border border-gray-100 focus:border-[#3d5afe] focus:ring-4 focus:ring-blue-100 outline-none transition-all"
-                            placeholder="ejemplo@balnex.com">
-                    </div>
+                    <input type="email" name="correo" autocomplete="username" required
+                        class="w-full pl-4 pr-4 py-4 rounded-2xl bg-white border border-gray-100 focus:border-[#3d5afe] focus:ring-4 focus:ring-blue-100 outline-none transition-all"
+                        placeholder="ejemplo@balnex.com">
                 </div>
 
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2 ml-1">Contraseña</label>
-                    <div class="relative">
-                        <i class="fa fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                        <input type="password" name="password" autocomplete="current-password" required
-                            class="w-full pl-12 pr-4 py-4 rounded-2xl bg-white border border-gray-100 focus:border-[#3d5afe] focus:ring-4 focus:ring-blue-100 outline-none transition-all"
-                            placeholder="••••••••">
-                    </div>
-
-                    <div class="text-right mt-2">
-                        <a href="#" class="text-xs font-bold text-[#3d5afe] hover:underline">¿Olvidaste tu
-                            contraseña?</a>
-                    </div>
+                    <input type="password" name="password" autocomplete="new-password" required
+                        class="w-full pl-4 pr-4 py-4 rounded-2xl bg-white border border-gray-100 focus:border-[#3d5afe] focus:ring-4 focus:ring-blue-100 outline-none transition-all"
+                        placeholder="••••••••">
                 </div>
 
                 {% if error %}
@@ -70,15 +57,15 @@
 
                 <button type="submit"
                     class="w-full bg-black text-white py-4 rounded-2xl font-bold text-lg hover:bg-gray-800 transition-all shadow-lg active:scale-[0.98]">
-                    Entrar
+                    Registrarse
                 </button>
-
             </form>
 
             <div class="mt-10 text-center">
-                <p class="text-sm text-gray-500">¿No tienes cuenta?
-                    <a href="{% url 'register' %}" class="text-[#ff3d77] font-bold hover:underline">Regístrate
-                        gratis</a>
+                <p class="text-sm text-gray-500">¿Ya tienes cuenta?
+                    <a href="{% url 'login' %}" class="text-[#ff3d77] font-bold hover:underline">
+                        Inicia sesión
+                    </a>
                 </p>
 
                 <div class="flex items-center my-8 text-gray-300">
@@ -94,13 +81,11 @@
                     </button>
                     <button
                         class="p-4 bg-white rounded-2xl border border-gray-100 hover:bg-gray-50 transition shadow-sm">
-                        <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" class="w-6 h-6"
-                            alt="Facebook">
+                        <img src="https://www.svgrepo.com/show/447194/apple-black.svg" class="w-6 h-6" alt="Apple">
                     </button>
                 </div>
             </div>
         </div>
     </div>
-
 </div>
 {% endblock contenido %}

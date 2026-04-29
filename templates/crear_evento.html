@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div class="max-w-5xl w-full bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row">
+
+        <div class="md:w-1/3 bg-[#0f172a] p-12 text-white relative">
+            <span class="inline-block bg-pink-500 text-[10px] font-black px-4 py-1 rounded-full uppercase mb-6">Paso
+                Final</span>
+            <h1 class="text-4xl font-black mb-6">Configura tu <span class="text-indigo-400">Experiencia</span></h1>
+            <p class="text-gray-400 leading-relaxed mb-12">Estás a un paso de asegurar el mejor lugar y servicio para tu
+                evento en Balnex.</p>
+
+            <div class="space-y-6">
+                <div class="flex items-center gap-4 opacity-50">
+                    <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
+                        <i class="fa fa-check text-xs"></i>
+                    </div>
+                    <span class="text-sm font-bold">Reserva 100% Protegida</span>
+                </div>
+                <div class="flex items-center gap-4 text-indigo-400">
+                    <div class="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                        <i class="fa fa-bolt text-xs"></i>
+                    </div>
+                    <span class="text-sm font-bold">Confirmación Inmediata</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="md:w-2/3 p-12">
+            <form method="POST" class="space-y-8">
+                {% csrf_token %}
+
+                {% if messages %}
+                {% for message in messages %}
+                <div
+                    class="p-4 mb-2 rounded-2xl text-sm font-bold {% if message.tags == 'error' %}bg-red-50 text-red-500 border border-red-100{% else %}bg-green-50 text-green-500 border border-green-100{% endif %}">
+                    <i
+                        class="fa {% if message.tags == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} mr-2"></i>
+                    {{ message }}
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                <div>
+                    <div class="flex items-center gap-3 mb-6">
+                        <span
+                            class="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center font-bold">1</span>
+                        <h2 class="text-xl font-black text-gray-800">Detalles Generales</h2>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nombre
+                                del Evento</label>
+                            <input type="text" name="nombre_evento" placeholder="Ej. Boda de Ana y Juan" required
+                                class="w-full mt-1 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Fecha</label>
+                                <input type="date" name="fecha_evento" required min="{% now 'Y-m-d' %}"
+                                    class="w-full mt-1 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                            </div>
+                            <div>
+                                <label
+                                    class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Invitados</label>
+                                <input type="number" name="cantidad_invitados" min="1" placeholder="0" required
+                                    class="w-full mt-1 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Lugar del
+                                Evento</label>
+                            <select name="lugar" required
+                                class="w-full mt-1 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <option value="" disabled selected>Selecciona una ubicación...</option>
+                                {% for l in lugares %}
+                                <option value="{{ l }}">{{ l }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label
+                                class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Descripción
+                                Breve</label>
+                            <textarea name="descripcion" rows="2" maxlength="500"
+                                placeholder="Escribe algo sobre el evento..."
+                                class="w-full mt-1 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center gap-3 mb-6">
+                        <span
+                            class="w-8 h-8 bg-pink-100 text-pink-500 rounded-lg flex items-center justify-center font-bold">2</span>
+                        <h2 class="text-xl font-black text-gray-800">Servicios Adicionales</h2>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="relative group cursor-pointer">
+                            <input type="checkbox" name="servicios" value="Catering" class="peer hidden">
+                            <div
+                                class="p-6 bg-white border border-gray-100 rounded-2xl text-center transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50 group-hover:shadow-md">
+                                <i class="fa fa-utensils text-gray-300 mb-2 block peer-checked:text-indigo-500"></i>
+                                <span
+                                    class="text-xs font-bold text-gray-500 peer-checked:text-indigo-600">Catering</span>
+                            </div>
+                        </label>
+
+                        <label class="relative group cursor-pointer">
+                            <input type="checkbox" name="servicios" value="Fotografía" class="peer hidden">
+                            <div
+                                class="p-6 bg-white border border-gray-100 rounded-2xl text-center transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50 group-hover:shadow-md">
+                                <i class="fa fa-camera text-gray-300 mb-2 block peer-checked:text-indigo-500"></i>
+                                <span
+                                    class="text-xs font-bold text-gray-500 peer-checked:text-indigo-600">Fotografía</span>
+                            </div>
+                        </label>
+
+                        <label class="relative group cursor-pointer">
+                            <input type="checkbox" name="servicios" value="DJ / Audio" class="peer hidden">
+                            <div
+                                class="p-6 bg-white border border-gray-100 rounded-2xl text-center transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50 group-hover:shadow-md">
+                                <i class="fa fa-music text-gray-300 mb-2 block peer-checked:text-indigo-500"></i>
+                                <span class="text-xs font-bold text-gray-500 peer-checked:text-indigo-600">DJ /
+                                    Audio</span>
+                            </div>
+                        </label>
+
+                        <label class="relative group cursor-pointer">
+                            <input type="checkbox" name="servicios" value="Decoración" class="peer hidden">
+                            <div
+                                class="p-6 bg-white border border-gray-100 rounded-2xl text-center transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50 group-hover:shadow-md">
+                                <i class="fa fa-magic text-gray-300 mb-2 block peer-checked:text-indigo-500"></i>
+                                <span
+                                    class="text-xs font-bold text-gray-500 peer-checked:text-indigo-600">Decoración</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 transition-all">
+                    Confirmar y Crear <i class="fa fa-chevron-right ml-2 text-sm opacity-50"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

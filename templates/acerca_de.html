@@ -1,136 +1,162 @@
 {% extends 'base.html' %}
 
+{% block title %}BalNex | Sobre Nosotros{% endblock %}
+
+{% block extra_css %}
+<style>
+    .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .glass {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+    }
+
+    .card-hover:hover {
+        transform: translateY(-5px);
+        transition: all 0.3s ease;
+    }
+</style>
+{% endblock %}
+
 {% block contenido %}
-
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nosotros | BalMex Studio</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .glass {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-        }
-        .text-gradient {
-            background: linear-gradient(135deg, #667eea 0%, #ec4899 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-    </style>
-</head>
-<body class="bg-gray-50 font-sans text-gray-800">
-
-    <nav class="glass sticky top-0 z-50 border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center">
-                    <span class="text-2xl font-bold text-indigo-600">Bal<span class="text-pink-500">Mex</span></span>
-                    <span class="ml-4 px-2 py-1 bg-indigo-100 text-indigo-600 text-xs font-bold rounded">STUDIO</span>
-                </div>
-                <div class="hidden md:flex space-x-8">
-                    <a href="#" class="text-gray-700 hover:text-indigo-600 font-medium">Panel</a>
-                    <a href="#" class="text-indigo-600 border-b-2 border-indigo-600 font-medium">Nosotros</a>
-                    <a href="#" class="text-gray-700 hover:text-indigo-600 font-medium">Soporte</a>
-                </div>
-                <button class="bg-indigo-600 text-white px-5 py-2 rounded-full font-semibold hover:bg-indigo-700 transition">
-                    Contacto
-                </button>
+<nav class="glass sticky top-0 z-50 border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16 items-center">
+            <div class="flex items-center">
+                <a href="{% url 'pagina_de_inicio' %}" class="text-2xl font-bold text-indigo-600">Bal<span class="text-pink-500">Nex</span></a>
+            </div>
+            <div class="flex items-center gap-4">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'pagina_de_inicio' %}" class="text-indigo-600 font-bold hover:text-pink-500 transition">Ir a mi Panel</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="text-gray-500 hover:text-indigo-600 font-bold transition">Iniciar Sesión</a>
+                    <a href="{% url 'register' %}" class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-indigo-700 transition">Crear Cuenta</a>
+                {% endif %}
             </div>
         </div>
-    </nav>
+    </div>
+</nav>
 
-    <header class="gradient-bg py-24 px-4 text-white text-center">
-        <div class="max-w-3xl mx-auto">
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-6">Impulsando la <br><span class="text-pink-300">Pasión por Crear</span></h1>
-            <p class="text-xl text-indigo-100 leading-relaxed">
-                En BalMex, no solo creamos software; construimos el puente entre tu idea y un evento inolvidable.
-            </p>
+<header class="gradient-bg py-20 px-4 text-white relative overflow-hidden">
+    <div class="max-w-7xl mx-auto flex flex-col items-center text-center relative z-10">
+        <span class="bg-white/20 px-4 py-1 rounded-full text-sm font-bold tracking-wider mb-6 uppercase">Conoce BalNex</span>
+        <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight">
+            Revolucionando la forma en que <br> <span class="text-pink-300">vives los eventos</span>
+        </h1>
+        <p class="text-xl text-indigo-100 max-w-2xl">
+            Somos más que una plataforma de boletos. Somos tu socio estratégico para crear, gestionar y hacer explotar tus experiencias en vivo.
+        </p>
+    </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 py-16">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-24">
+        <div>
+            <img src="https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&q=80&w=800" alt="Concierto" class="rounded-3xl shadow-2xl card-hover object-cover h-96 w-full">
         </div>
-    </header>
-
-    <main class="max-w-7xl mx-auto px-4 py-20">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-            <div>
-                <h2 class="text-3xl font-bold mb-6 text-gray-900">Nuestra Misión</h2>
-                <p class="text-lg text-gray-600 mb-6 leading-relaxed">
-                    Nacimos con un objetivo claro: **eliminar el estrés de la organización**. Sabemos que gestionar un evento puede ser caótico, por eso desarrollamos herramientas intuitivas que automatizan la administración, permitiéndote enfocarte en lo que realmente importa: **tus invitados.**
+        <div>
+            <h2 class="text-3xl font-extrabold text-gray-900 mb-6">Nuestro Objetivo y Meta</h2>
+            
+            <div class="mb-8">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                        <i class="fa fa-bullseye text-lg"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800">El Objetivo</h3>
+                </div>
+                <p class="text-gray-600 leading-relaxed ml-14">
+                    Eliminar la fricción técnica y financiera para los creadores de eventos. Queremos que te enfoques en la magia de tu evento, mientras nosotros nos encargamos de que la venta y validación de boletos sea un proceso invisible y perfecto.
                 </p>
-                <div class="space-y-4">
-                    <div class="flex items-start gap-4">
-                        <div class="bg-indigo-100 p-2 rounded-lg text-indigo-600">
-                            <i class="fa fa-check-circle"></i>
-                        </div>
-                        <p class="text-gray-700">Simplificamos la venta de boletos y el registro.</p>
-                    </div>
-                    <div class="flex items-start gap-4">
-                        <div class="bg-indigo-100 p-2 rounded-lg text-indigo-600">
-                            <i class="fa fa-check-circle"></i>
-                        </div>
-                        <p class="text-gray-700">Centralizamos tus finanzas y métricas en tiempo real.</p>
-                    </div>
-                    <div class="flex items-start gap-4">
-                        <div class="bg-indigo-100 p-2 rounded-lg text-indigo-600">
-                            <i class="fa fa-check-circle"></i>
-                        </div>
-                        <p class="text-gray-700">Brindamos soporte humano a organizadores apasionados.</p>
-                    </div>
-                </div>
             </div>
-            <div class="relative">
-                <div class="absolute -top-4 -left-4 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
-                <div class="absolute -bottom-8 -right-4 w-72 h-72 bg-indigo-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
-                <img src="https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=800" alt="Equipo trabajando" class="relative rounded-2xl shadow-2xl">
+
+            <div>
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 bg-pink-50 rounded-xl flex items-center justify-center text-pink-600">
+                        <i class="fa fa-rocket text-lg"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800">La Meta</h3>
+                </div>
+                <p class="text-gray-600 leading-relaxed ml-14">
+                    Convertirnos en el ecosistema líder en Latinoamérica para la gestión de experiencias en vivo para el 2028, impulsando a más de 10,000 organizadores independientes a alcanzar el "Sold Out".
+                </p>
             </div>
         </div>
+    </div>
 
-        <section class="mt-32">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold text-gray-900">¿Por qué elegir BalMex?</h2>
-                <p class="text-gray-500 mt-2">Nuestros pilares fundamentales</p>
+    <div class="text-center mb-24">
+        <h2 class="text-3xl font-extrabold text-gray-900 mb-4">¿Por qué somos tu mejor opción?</h2>
+        <p class="text-gray-500 max-w-2xl mx-auto mb-12">No solo procesamos pagos, construimos herramientas que hacen crecer tu comunidad.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 card-hover text-left">
+                <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 mb-6">
+                    <i class="fa fa-bolt text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Velocidad Absoluta</h3>
+                <p class="text-gray-600">Nuestra infraestructura garantiza que tu venta de boletos no colapse, incluso si miles de fans intentan comprar al mismo milisegundo.</p>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-                <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-xl transition">
-                    <div class="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                        <i class="fa fa-bolt text-2xl text-indigo-600"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">Agilidad</h3>
-                    <p class="text-gray-600 text-sm">Crea un evento y empieza a vender en menos de 5 minutos. Sin complicaciones técnicas.</p>
-                </div>
-                <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-xl transition">
-                    <div class="w-16 h-16 bg-pink-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                        <i class="fa fa-shield-alt text-2xl text-pink-600"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">Seguridad</h3>
-                    <p class="text-gray-600 text-sm">Protegemos tus datos y los de tus asistentes con los más altos estándares de encriptación.</p>
-                </div>
-                <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-xl transition">
-                    <div class="w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                        <i class="fa fa-heart text-2xl text-purple-600"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">Empatía</h3>
-                    <p class="text-gray-600 text-sm">Somos organizadores ayudando a organizadores. Entendemos tus retos y crecemos contigo.</p>
-                </div>
-            </div>
-        </section>
-    </main>
 
-    <footer class="bg-gray-900 text-white py-12">
-        <div class="max-w-7xl mx-auto px-4 text-center">
-            <span class="text-2xl font-bold text-indigo-400">Bal<span class="text-pink-400">Mex</span></span>
-            <p class="mt-4 text-gray-500 text-sm italic">"Facilitando el éxito de tus eventos, un paso a la vez."</p>
-            <div class="mt-8 pt-8 border-t border-gray-800">
-                <p class="text-gray-500 text-xs">&copy; 2024 BalMex Studio. Todos los derechos reservados.</p>
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 card-hover text-left">
+                <div class="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center text-green-600 mb-6">
+                    <i class="fa fa-chart-pie text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Analítica en Tiempo Real</h3>
+                <p class="text-gray-600">Conoce de dónde vienen tus compradores, a qué hora compran y qué estrategias de marketing te están funcionando mejor.</p>
+            </div>
+
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 card-hover text-left">
+                <div class="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600 mb-6">
+                    <i class="fa fa-qrcode text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Acceso Inteligente</h3>
+                <p class="text-gray-600">Escanea cientos de boletos por minuto en la entrada de tu evento con nuestra tecnología anti-fraude y de lectura rápida.</p>
             </div>
         </div>
-    </footer>
+    </div>
 
-</body>
-</html>
+    <div class="bg-gray-50 rounded-3xl p-8 md:p-12 border border-gray-100">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+            
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <i class="fa fa-headset text-indigo-500"></i> Soporte Dedicado
+                </h2>
+                <p class="text-gray-600 mb-6">
+                    Sabemos que en el mundo de los eventos, el tiempo es oro. Nuestro equipo de soporte está disponible 24/7 para ayudarte a configurar tus eventos, resolver dudas de pago o asistirte durante el día del evento.
+                </p>
+                <a href="mailto:soporte@balnex.com" class="text-indigo-600 font-bold hover:text-pink-500 transition flex items-center gap-2">
+                    Contactar a Soporte <i class="fa fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                    <i class="fa fa-shield-alt text-indigo-500"></i> Privacidad y Seguridad
+                </h2>
+                <p class="text-gray-600 mb-6">
+                    Tus datos y los de tus clientes son sagrados. Operamos bajo estrictos protocolos de encriptación de grado bancario (PCI-DSS) y garantizamos que la información de tus asistentes nunca será vendida a terceros.
+                </p>
+                <a href="#" class="text-indigo-600 font-bold hover:text-pink-500 transition flex items-center gap-2">
+                    Leer aviso de privacidad <i class="fa fa-arrow-right"></i>
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+</main>
+
+<footer class="bg-gray-50 text-gray-400 py-8 border-t border-gray-200 mt-12">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center text-sm font-medium">
+        <p>&copy; 2026 BalNex Studio. Todos los derechos reservados.</p>
+        <div class="flex gap-4 mt-4 md:mt-0">
+            <a href="#" class="hover:text-indigo-500 transition">Soporte</a>
+            <a href="#" class="hover:text-indigo-500 transition">Términos</a>
+            <a href="#" class="hover:text-indigo-500 transition">Privacidad</a>
+        </div>
+    </div>
+</footer>
 {% endblock contenido %}
