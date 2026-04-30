@@ -3,9 +3,7 @@ from django.db.models import Sum
 from .models import Evento, Reservacion
 
 def calcular_ocupados(evento):
-    """
-    Calcula el total de personas usando la base de datos en lugar de la memoria de Python.
-    """
+
     resultado = evento.reservacion_set.aggregate(total=Sum('numero_personas'))
     return resultado['total'] or 0
 
@@ -19,9 +17,7 @@ def crear_reservacion(evento_id, nombre, personas):
         raise ValueError("El número de personas debe ser mayor a 0.")
 
     try:
-        # select_for_update() bloquea este evento temporalmente para otras consultas
-        # hasta que esta reservación se guarde. Esto evita sobrecupos si 2 usuarios 
-        # dan clic en "Reservar" al mismo tiempo exacto.
+
         evento = Evento.objects.select_for_update().get(id=evento_id)
     except Evento.DoesNotExist:
         raise ValueError("El evento no existe.")
@@ -41,14 +37,13 @@ def editar_reservacion(reservacion_id, personas):
         raise ValueError("El número de personas debe ser mayor a 0.")
 
     try:
-        # select_related optimiza la consulta trayendo el evento asociado de una vez
+
         r = Reservacion.objects.select_related('evento').get(id=reservacion_id)
-        # Bloqueamos el evento para validar cupo de forma segura
+
         evento = Evento.objects.select_for_update().get(id=r.evento.id)
     except Reservacion.DoesNotExist:
         raise ValueError("La reservación no existe.")
 
-    # Calculamos cuántos lugares quedarían ocupados si quitamos momentáneamente esta reservación
     ocupados_sin_esta_reserva = calcular_ocupados(evento) - r.numero_personas
 
     if (ocupados_sin_esta_reserva + personas) > evento.cupo_maximo:

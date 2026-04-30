@@ -11,7 +11,6 @@ from django.db.models import Sum
 from .models import Evento, Reservacion
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-# Agrega estas importaciones al inicio de tu views.py
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
@@ -24,8 +23,6 @@ class VistaPaginaInicio(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # 🔹 Filtramos para que solo traiga los eventos del usuario logueado
-        # Usamos self.request.user porque estamos dentro de una Clase (TemplateView)
         context["eventos"] = Evento.objects.filter(usuario=self.request.user).order_by(
             "-id"
         )
@@ -68,7 +65,6 @@ def register_view(request):
         correo = request.POST.get("correo")
         password = request.POST.get("password")
 
-        # 🔹 Validar formato real de email
         try:
             validate_email(correo)
         except ValidationError:
@@ -77,16 +73,13 @@ def register_view(request):
         if not correo.endswith((".com", ".mx", ".edu", ".org")):
             return render(request, "register.html", {"error": "Dominio no permitido"})
 
-        # 🔹 Evitar duplicados
         if User.objects.filter(email=correo).exists():
             return render(
                 request, "register.html", {"error": "El correo ya está registrado"}
             )
 
-        # 🔹 Crear usuario
         User.objects.create_user(username=correo, email=correo, password=password)
 
-        # 🔹 Redirigir al login pasando el correo en la URL
         url_login = reverse("login")
         return redirect(f"{url_login}?correo={correo}")
 
@@ -94,24 +87,22 @@ def register_view(request):
 
 
 def logout_view(request):
-    logout(request)  # Esto destruye la sesión actual
-    return redirect("login")  #
+    logout(request)
+    return redirect("login")
 
 
 def gestion_eventos(request):
-    # READ: Ver eventos disponibles [cite: 28, 58]
+
     eventos = Evento.objects.all()
     return render(request, "inicio.html", {"eventos": eventos})
 
 
-# Función para manejar la lógica de Balnex
-from django.utils import timezone  # Por si necesitas validar horas reales
+from django.utils import timezone
 
 
 def detalle_y_reserva(request, id_evento):
     evento = get_object_or_404(Evento, pk=id_evento)
 
-    # Cálculos de disponibilidad
     asistentes = (
         Reservacion.objects.filter(evento=evento).aggregate(Sum("numero_personas"))[
             "numero_personas__sum"
@@ -125,17 +116,15 @@ def detalle_y_reserva(request, id_evento):
     if request.method == "POST":
         nombre = request.POST.get("nombre_cliente")
         personas = int(request.POST.get("numero_personas", 0))
-        # CAPTURAMOS LA HORA DEL FORMULARIO
         hora_seleccionada = request.POST.get("hora_reserva")
 
-        # Validación: Cupo suficiente y que hayan enviado una hora
         if 0 < personas <= disponible and hora_seleccionada:
             try:
                 Reservacion.objects.create(
                     evento=evento,
                     nombre_cliente=nombre,
                     numero_personas=personas,
-                    hora=hora_seleccionada,  # Asegúrate que tu modelo Reservacion tenga este campo
+                    hora=hora_seleccionada,
                 )
                 messages.success(
                     request, f"¡Reserva confirmada para las {hora_seleccionada}!"
@@ -149,7 +138,7 @@ def detalle_y_reserva(request, id_evento):
 
     return render(
         request,
-        "inicio.html",  # Cambia a "detalle.html" si creas uno nuevo
+        "inicio.html",
         {
             "evento": evento,
             "disponible": disponible,
@@ -161,30 +150,41 @@ def detalle_y_reserva(request, id_evento):
 
 @login_required(login_url="/login/")
 def crear_evento(request):
+
+    lugares_disponibles = [
+        "Salón Diamante",
+        "Jardín Principal",
+        "Terraza VIP",
+        "Hacienda Balnex",
+    ]
+
     if request.method == "POST":
-        # 1. Obtener los datos del formulario (los atributos 'name' del HTML)
+
         nombre = request.POST.get("nombre_evento")
         fecha = request.POST.get("fecha_evento")
         invitados = request.POST.get("cantidad_invitados")
 
-        # 2. Los checkboxes devuelven una lista, la convertimos a texto separado por comas
-        servicios_lista = request.POST.getlist("servicios")
-        servicios_str = ", ".join(servicios_lista)  # Ej: "catering, fotografia"
+        lugar_seleccionado = request.POST.get("lugar")
+        descripcion = request.POST.get("descripcion")
 
-        # 3. Guardar en la base de datos vinculado al usuario logueado
+        servicios_lista = request.POST.getlist("servicios")
+        servicios_str = ", ".join(servicios_lista)
+
         Evento.objects.create(
-            usuario=request.user,  # ¡Aquí es donde se vincula al usuario actual!
+            usuario=request.user,
             nombre_evento=nombre,
             fecha_evento=fecha,
-            cupo_maximo=invitados,  # Mapeamos los invitados al cupo máximo
+            cupo_maximo=invitados,
             servicios=servicios_str,
+            lugar=lugar_seleccionado,
+            descripcion=descripcion,
         )
 
-        # 4. Mensaje de éxito y redirección al inicio (dashboard)
         messages.success(
             request, "¡Tu evento se ha configurado y guardado exitosamente!"
         )
         return redirect("pagina_de_inicio")
 
-    # Si la petición es GET, simplemente mostramos la página con el formulario
-    return render(request, "crear_evento.html")
+    contexto = {"lugares": lugares_disponibles}
+
+    return render(request, "crear_evento.html", contexto)

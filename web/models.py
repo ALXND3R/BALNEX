@@ -1,16 +1,15 @@
 import uuid
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 
-from django.db import models
-from django.contrib.auth.models import User
 
 def generar_codigo_unico():
     return uuid.uuid4().hex[:8].upper()
 
 class Evento(models.Model):
-    # 🔹 2. Añadimos el campo que guardará el código automáticamente
+
     codigo_invitacion = models.CharField(max_length=10, unique=True, default=generar_codigo_unico)
     
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='mis_eventos', null=True, blank=True)
@@ -26,11 +25,11 @@ class Evento(models.Model):
     
 
 class Reservacion(models.Model):
-    id_reservacion = models.AutoField(primary_key=True)  # (cite: 38)
-    nombre_cliente = models.CharField(max_length=100)  # (cite: 38)
-    numero_personas = models.PositiveIntegerField()  # (cite: 39)
-    evento = models.ForeignKey(Evento, on_delete=models.CASCADE)  # (cite: 40)ç
+    id_reservacion = models.AutoField(primary_key=True)
+    nombre_cliente = models.CharField(max_length=100)
+    numero_personas = models.PositiveIntegerField()
+    evento = models.ForeignKey(Evento, on_delete=models.CASCADE)
     hora = models.TimeField(null=True, blank=True)
 
     class Meta:
-        unique_together = ("evento", "nombre_cliente")  # Evita duplicados (cite: 18)
+        unique_together = ("evento", "nombre_cliente")
