@@ -70,7 +70,7 @@ def register_view(request):
         except ValidationError:
             return render(request, "register.html", {"error": "Correo no válido"})
 
-        if not correo.endswith((".com", ".mx", ".edu", ".org")):
+        if not correo.endswith(("gmail.com", ".mx", ".edu", ".org")):
             return render(request, "register.html", {"error": "Dominio no permitido"})
 
         if User.objects.filter(email=correo).exists():

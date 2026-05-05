@@ -14,7 +14,7 @@ def hay_cupo(evento, personas):
 @transaction.atomic
 def crear_reservacion(evento_id, nombre, personas):
     if personas <= 0:
-        raise ValueError("El número de personas debe ser mayor a 0.")
+        raise ValueError("El número de personas debe ser mayor a 0")
 
     try:
 
