@@ -7,6 +7,8 @@ from .views import (
     logout_view,
     detalle_y_reserva,
     crear_evento,
+    buscar_evento,
+    eliminar_evento,
 )
 
 urlpatterns = [
@@ -14,6 +16,8 @@ urlpatterns = [
     path("nosotros/", VistaPaginaAcercaDe.as_view(), name="acerca_de"),
     path("evento/<int:id_evento>/", detalle_y_reserva, name="detalle_y_reserva"),
     path("crear-evento/", crear_evento, name="crear_evento"),
+    path("buscar-evento/", buscar_evento, name="buscar_evento"),
+    path("evento/<int:id_evento>/eliminar/", eliminar_evento, name="eliminar_evento"),
 
     path("login/", login_view, name="login"),
     path("registro/", register_view, name="register"),

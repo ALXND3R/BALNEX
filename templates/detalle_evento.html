@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle del Evento{% endblock %}
+
+{% block contenido %}
+<div class="min-h-screen bg-gray-50 py-12 px-4">
+    <div class="max-w-4xl mx-auto bg-white rounded-[2rem] shadow-xl p-8">
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="mb-4 p-4 rounded-2xl font-bold 
+                    {% if message.tags == 'error' %}
+                        bg-red-100 text-red-700
+                    {% else %}
+                        bg-green-100 text-green-700
+                    {% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <a href="{% url 'pagina_de_inicio' %}" class="text-indigo-600 font-bold hover:text-pink-500">
+            ← Volver al inicio
+        </a>
+
+        <div class="mt-8">
+            <span
+                class="inline-block bg-indigo-100 text-indigo-600 px-4 py-2 rounded-full text-xs font-black uppercase">
+                Código: {{ evento.codigo_invitacion }}
+            </span>
+
+            <h1 class="text-4xl font-black text-gray-900 mt-4">
+                {{ evento.nombre_evento }}
+            </h1>
+
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gray-50 p-5 rounded-2xl">
+                    <p class="text-xs font-black text-gray-400 uppercase">Fecha</p>
+                    <p class="text-lg font-bold text-gray-800">
+                        {{ evento.fecha_evento }}
+                    </p>
+                </div>
+
+                <div class="bg-gray-50 p-5 rounded-2xl">
+                    <p class="text-xs font-black text-gray-400 uppercase">Lugar</p>
+                    <p class="text-lg font-bold text-gray-800">
+                        {{ evento.lugar }}
+                    </p>
+                </div>
+
+                <div class="bg-gray-50 p-5 rounded-2xl">
+                    <p class="text-xs font-black text-gray-400 uppercase">Cupo máximo</p>
+                    <p class="text-lg font-bold text-gray-800">
+                        {{ evento.cupo_maximo }} personas
+                    </p>
+                </div>
+
+                <div class="bg-gray-50 p-5 rounded-2xl">
+                    <p class="text-xs font-black text-gray-400 uppercase">Lugares disponibles</p>
+                    <p class="text-lg font-bold text-gray-800">
+                        {{ disponible }} lugares
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-6 bg-gray-50 p-5 rounded-2xl">
+                <p class="text-xs font-black text-gray-400 uppercase">Servicios</p>
+                <p class="text-lg font-bold text-gray-800">
+                    {% if evento.servicios %}
+                    {{ evento.servicios }}
+                    {% else %}
+                    Sin servicios adicionales
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="mt-6 bg-gray-50 p-5 rounded-2xl">
+                <p class="text-xs font-black text-gray-400 uppercase">Descripción</p>
+                <p class="text-gray-700 mt-2">
+                    {% if evento.descripcion %}
+                    {{ evento.descripcion }}
+                    {% else %}
+                    Este evento no tiene descripción.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        {% if es_organizador %}
+
+        <div class="mt-10 p-5 rounded-2xl bg-indigo-50 text-indigo-700 font-bold">
+            Tú organizas este evento. No necesitas reservar un lugar.
+        </div>
+
+        <a href="{% url 'pagina_de_inicio' %}"
+            class="mt-6 inline-block bg-gray-900 text-white px-8 py-4 rounded-2xl font-black hover:bg-indigo-600 transition-all">
+            Volver al panel principal
+        </a>
+
+        {% elif esta_lleno %}
+
+        <div class="mt-10 p-5 rounded-2xl bg-red-100 text-red-700 font-bold">
+            Este evento ya no tiene lugares disponibles.
+        </div>
+
+        <a href="{% url 'pagina_de_inicio' %}"
+            class="mt-6 inline-block bg-gray-900 text-white px-8 py-4 rounded-2xl font-black hover:bg-indigo-600 transition-all">
+            Volver al panel principal
+        </a>
+
+        {% else %}
+
+        <div class="mt-10 border-t pt-8">
+            <h2 class="text-2xl font-black text-gray-900 mb-4">Reservar asistencia</h2>
+
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+
+                <div>
+                    <label class="text-xs font-black text-gray-400 uppercase">Nombre</label>
+                    <input type="text" name="nombre_cliente" required
+                        class="w-full mt-1 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+
+                <div>
+                    <label class="text-xs font-black text-gray-400 uppercase">Número de personas</label>
+                    <input type="number" name="numero_personas" min="1" max="{{ disponible }}" required
+                        class="w-full mt-1 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+
+                <div>
+                    <label class="text-xs font-black text-gray-400 uppercase">Hora</label>
+                    <input type="time" name="hora_reserva" required
+                        class="w-full mt-1 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black hover:bg-indigo-700 transition-all">
+                    Confirmar reserva
+                </button>
+            </form>
+
+            <a href="{% url 'pagina_de_inicio' %}"
+                class="mt-6 inline-block w-full text-center bg-gray-900 text-white py-4 rounded-2xl font-black hover:bg-indigo-600 transition-all">
+                Volver al panel principal
+            </a>
+        </div>
+
+        {% endif %} <label class="text-xs font-black text-gray-400 uppercase">Hora</label>
+
+    </div>
+</div>
+{% endblock %}

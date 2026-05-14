@@ -100,8 +100,11 @@ def gestion_eventos(request):
 from django.utils import timezone
 
 
+@login_required(login_url="/login/")
 def detalle_y_reserva(request, id_evento):
     evento = get_object_or_404(Evento, pk=id_evento)
+
+    es_organizador = evento.usuario == request.user
 
     asistentes = (
         Reservacion.objects.filter(evento=evento).aggregate(Sum("numero_personas"))[
@@ -109,11 +112,17 @@ def detalle_y_reserva(request, id_evento):
         ]
         or 0
     )
+
     disponible = evento.cupo_maximo - asistentes
     ganancias = asistentes * 1500
     esta_lleno = disponible <= 0
 
     if request.method == "POST":
+
+        if es_organizador:
+            messages.error(request, "No puedes reservar un lugar en tu propio evento.")
+            return redirect("detalle_y_reserva", id_evento=evento.id)
+
         nombre = request.POST.get("nombre_cliente")
         personas = int(request.POST.get("numero_personas", 0))
         hora_seleccionada = request.POST.get("hora_reserva")
@@ -126,24 +135,30 @@ def detalle_y_reserva(request, id_evento):
                     numero_personas=personas,
                     hora=hora_seleccionada,
                 )
+
                 messages.success(
                     request, f"¡Reserva confirmada para las {hora_seleccionada}!"
                 )
-            except Exception as e:
-                messages.error(request, "Hubo un error al procesar tu reserva.")
+
+            except Exception:
+                messages.error(
+                    request,
+                    "Ya existe una reservación con ese nombre para este evento.",
+                )
         else:
             messages.error(request, "Datos inválidos o cupo insuficiente.")
 
-        return redirect("detalle_y_reserva", id_evento=evento.id_evento)
+        return redirect("detalle_y_reserva", id_evento=evento.id)
 
     return render(
         request,
-        "inicio.html",
+        "detalle_evento.html",
         {
             "evento": evento,
             "disponible": disponible,
             "ganancias": ganancias,
             "esta_lleno": esta_lleno,
+            "es_organizador": es_organizador,
         },
     )
 
@@ -188,3 +203,30 @@ def crear_evento(request):
     contexto = {"lugares": lugares_disponibles}
 
     return render(request, "crear_evento.html", contexto)
+
+
+@login_required(login_url="/login/")
+def buscar_evento(request):
+    codigo = request.GET.get("codigo", "").strip().upper()
+
+    if not codigo:
+        messages.error(request, "Ingresa un código de invitación.")
+        return redirect("pagina_de_inicio")
+
+    evento = Evento.objects.filter(codigo_invitacion=codigo).first()
+
+    if evento is None:
+        messages.error(request, "No se encontró ningún evento con ese código.")
+        return redirect("pagina_de_inicio")
+
+    return redirect("detalle_y_reserva", id_evento=evento.id)
+
+@login_required(login_url="/login/")
+def eliminar_evento(request, id_evento):
+    evento = get_object_or_404(Evento, pk=id_evento, usuario=request.user)
+
+    if request.method == "POST":
+        evento.delete()
+        messages.success(request, "Evento eliminado correctamente.")
+
+    return redirect("pagina_de_inicio")
