@@ -9,11 +9,11 @@
         {% if messages %}
         {% for message in messages %}
         <div class="mb-4 p-4 rounded-2xl font-bold 
-                    {% if message.tags == 'error' %}
-                        bg-red-100 text-red-700
-                    {% else %}
-                        bg-green-100 text-green-700
-                    {% endif %}">
+                {% if message.tags == 'error' %}
+                    bg-red-100 text-red-700
+                {% else %}
+                    bg-green-100 text-green-700
+                {% endif %}">
             {{ message }}
         </div>
         {% endfor %}
@@ -23,7 +23,7 @@
             ← Volver al inicio
         </a>
 
-        <div class="mt-8">
+        <div class="mt-8 cursor-pointer" onclick="toggleInformacionEvento()">
             <span
                 class="inline-block bg-indigo-100 text-indigo-600 px-4 py-2 rounded-full text-xs font-black uppercase">
                 Código: {{ evento.codigo_invitacion }}
@@ -33,7 +33,14 @@
                 {{ evento.nombre_evento }}
             </h1>
 
-            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <p class="text-sm text-gray-400 font-bold mt-2">
+                Clic para ver u ocultar información del evento
+            </p>
+        </div>
+
+        <div id="informacion-evento" class="mt-8 hidden">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-gray-50 p-5 rounded-2xl">
                     <p class="text-xs font-black text-gray-400 uppercase">Fecha</p>
                     <p class="text-lg font-bold text-gray-800">
@@ -84,6 +91,7 @@
                     {% endif %}
                 </p>
             </div>
+
         </div>
 
         {% if es_organizador %}
@@ -92,13 +100,54 @@
             Tú organizas este evento. No necesitas reservar un lugar.
         </div>
 
+        <div class="mt-10">
+            <h2 class="text-2xl font-black text-gray-900 mb-4">
+                Personas que reservaron lugar
+            </h2>
+
+            {% if reservaciones %}
+            <div class="overflow-x-auto bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-50 border-b border-gray-100">
+                        <tr>
+                            <th class="px-5 py-4 text-xs font-black text-gray-500 uppercase">Nombre</th>
+                            <th class="px-5 py-4 text-xs font-black text-gray-500 uppercase">Hora aprox. de llegada</th>
+                            <th class="px-5 py-4 text-xs font-black text-gray-500 uppercase">Invitados</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for reservacion in reservaciones %}
+                        <tr class="border-b border-gray-100 hover:bg-gray-50">
+                            <td class="px-5 py-4 font-bold text-gray-800">
+                                {{ reservacion.nombre_cliente }}
+                            </td>
+                            <td class="px-5 py-4 text-gray-700">
+                                {{ reservacion.hora_reserva }}
+                            </td>
+                            <td class="px-5 py-4 text-gray-700">
+                                {{ reservacion.numero_personas }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="bg-gray-50 border border-dashed border-gray-300 rounded-2xl p-6 text-center">
+                <p class="text-gray-500 font-bold">
+                    Todavía nadie ha reservado lugar en este evento.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+
         <a href="{% url 'pagina_de_inicio' %}"
             class="mt-6 inline-block bg-gray-900 text-white px-8 py-4 rounded-2xl font-black hover:bg-indigo-600 transition-all">
             Volver al panel principal
         </a>
 
         {% elif esta_lleno %}
-
         <div class="mt-10 p-5 rounded-2xl bg-red-100 text-red-700 font-bold">
             Este evento ya no tiene lugares disponibles.
         </div>
@@ -146,8 +195,15 @@
             </a>
         </div>
 
-        {% endif %} <label class="text-xs font-black text-gray-400 uppercase">Hora</label>
+        {% endif %}
 
     </div>
 </div>
+
+<script>
+    function toggleInformacionEvento() {
+        const info = document.getElementById("informacion-evento");
+        info.classList.toggle("hidden");
+    }
+</script>
 {% endblock %}

@@ -14,10 +14,10 @@ from .views import (
 urlpatterns = [
     path("", VistaPaginaInicio.as_view(), name="pagina_de_inicio"),
     path("nosotros/", VistaPaginaAcercaDe.as_view(), name="acerca_de"),
-    path("evento/<int:id_evento>/", detalle_y_reserva, name="detalle_y_reserva"),
+    path("evento/<int:evento_id>/", detalle_y_reserva, name="detalle_y_reserva"),
     path("crear-evento/", crear_evento, name="crear_evento"),
     path("buscar-evento/", buscar_evento, name="buscar_evento"),
-    path("evento/<int:id_evento>/eliminar/", eliminar_evento, name="eliminar_evento"),
+    path("evento/<int:evento_id>/eliminar/", eliminar_evento, name="eliminar_evento"),
 
     path("login/", login_view, name="login"),
     path("registro/", register_view, name="register"),

@@ -14,6 +14,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
+from django.utils import timezone
+
 
 @method_decorator(never_cache, name="dispatch")
 class VistaPaginaInicio(LoginRequiredMixin, TemplateView):
@@ -23,8 +25,14 @@ class VistaPaginaInicio(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context["eventos"] = Evento.objects.filter(usuario=self.request.user).order_by(
-            "-id"
+        context["eventos"] = Evento.objects.filter(
+            organizador=self.request.user
+        ).order_by("-id")
+
+        context["mis_reservaciones"] = (
+            Reservacion.objects.filter(usuario=self.request.user)
+            .select_related("evento")
+            .order_by("evento__fecha_evento")
         )
 
         return context
@@ -97,112 +105,107 @@ def gestion_eventos(request):
     return render(request, "inicio.html", {"eventos": eventos})
 
 
-from django.utils import timezone
+@login_required
+def detalle_y_reserva(request, evento_id):
+    evento = get_object_or_404(Evento, id=evento_id)
 
+    es_organizador = evento.organizador == request.user
 
-@login_required(login_url="/login/")
-def detalle_y_reserva(request, id_evento):
-    evento = get_object_or_404(Evento, pk=id_evento)
-
-    es_organizador = evento.usuario == request.user
-
-    asistentes = (
-        Reservacion.objects.filter(evento=evento).aggregate(Sum("numero_personas"))[
-            "numero_personas__sum"
-        ]
-        or 0
+    total_reservado = sum(
+        reservacion.numero_personas for reservacion in evento.reservaciones.all()
     )
 
-    disponible = evento.cupo_maximo - asistentes
-    ganancias = asistentes * 1500
+    disponible = evento.cupo_maximo - total_reservado
     esta_lleno = disponible <= 0
+
+    ya_reservo = Reservacion.objects.filter(
+        evento=evento, usuario=request.user
+    ).exists()
 
     if request.method == "POST":
 
         if es_organizador:
-            messages.error(request, "No puedes reservar un lugar en tu propio evento.")
-            return redirect("detalle_y_reserva", id_evento=evento.id)
+            messages.error(
+                request, "Tú organizas este evento. No necesitas reservar un lugar."
+            )
+            return redirect("detalle_y_reserva", evento_id=evento.id)
 
-        nombre = request.POST.get("nombre_cliente")
-        personas = int(request.POST.get("numero_personas", 0))
-        hora_seleccionada = request.POST.get("hora_reserva")
+        if ya_reservo:
+            messages.error(request, "Ya reservaste un lugar en este evento.")
+            return redirect("detalle_y_reserva", evento_id=evento.id)
 
-        if 0 < personas <= disponible and hora_seleccionada:
-            try:
-                Reservacion.objects.create(
-                    evento=evento,
-                    nombre_cliente=nombre,
-                    numero_personas=personas,
-                    hora=hora_seleccionada,
-                )
+        nombre_cliente = request.POST.get("nombre_cliente")
+        numero_personas = int(request.POST.get("numero_personas"))
+        hora_reserva = request.POST.get("hora_reserva")
 
-                messages.success(
-                    request, f"¡Reserva confirmada para las {hora_seleccionada}!"
-                )
+        if numero_personas > disponible:
+            messages.error(request, "No hay suficientes lugares disponibles.")
+            return redirect("detalle_y_reserva", evento_id=evento.id)
 
-            except Exception:
-                messages.error(
-                    request,
-                    "Ya existe una reservación con ese nombre para este evento.",
-                )
-        else:
-            messages.error(request, "Datos inválidos o cupo insuficiente.")
+        Reservacion.objects.create(
+            evento=evento,
+            usuario=request.user,
+            nombre_cliente=nombre_cliente,
+            numero_personas=numero_personas,
+            hora_reserva=hora_reserva,
+        )
 
-        return redirect("detalle_y_reserva", id_evento=evento.id)
+        messages.success(request, "Asistencia confirmada correctamente.")
+        return redirect("pagina_de_inicio")
+
+    reservaciones = evento.reservaciones.all().order_by("hora_reserva")
 
     return render(
         request,
         "detalle_evento.html",
         {
             "evento": evento,
-            "disponible": disponible,
-            "ganancias": ganancias,
-            "esta_lleno": esta_lleno,
             "es_organizador": es_organizador,
+            "disponible": disponible,
+            "esta_lleno": esta_lleno,
+            "ya_reservo": ya_reservo,
+            "reservaciones": reservaciones,
         },
     )
 
 
-@login_required(login_url="/login/")
+@login_required
 def crear_evento(request):
-
-    lugares_disponibles = [
+    lugares = [
         "Salón Diamante",
-        "Jardín Principal",
-        "Terraza VIP",
         "Hacienda Balnex",
+        "Jardín Las Palmas",
+        "Terraza del Mar",
+        "Salón Imperial",
+        "Quinta Los Olivos",
+        "Centro de Convenciones",
+        "Salón Vista Alegre",
+        "Jardín Bugambilias",
+        "Hotel Coral Marina",
     ]
 
     if request.method == "POST":
-
-        nombre = request.POST.get("nombre_evento")
-        fecha = request.POST.get("fecha_evento")
-        invitados = request.POST.get("cantidad_invitados")
-
-        lugar_seleccionado = request.POST.get("lugar")
+        nombre_evento = request.POST.get("nombre_evento")
+        fecha_evento = request.POST.get("fecha_evento")
+        cantidad_invitados = request.POST.get("cantidad_invitados")
+        lugar = request.POST.get("lugar")
         descripcion = request.POST.get("descripcion")
-
-        servicios_lista = request.POST.getlist("servicios")
-        servicios_str = ", ".join(servicios_lista)
+        servicios = request.POST.getlist("servicios")
 
         Evento.objects.create(
-            usuario=request.user,
-            nombre_evento=nombre,
-            fecha_evento=fecha,
-            cupo_maximo=invitados,
-            servicios=servicios_str,
-            lugar=lugar_seleccionado,
+            organizador=request.user,
+            nombre_evento=nombre_evento,
+            fecha_evento=fecha_evento,
+            cupo_maximo=cantidad_invitados,
+            lugar=lugar,
             descripcion=descripcion,
+            servicios=", ".join(servicios),
         )
 
-        messages.success(
-            request, "¡Tu evento se ha configurado y guardado exitosamente!"
-        )
+        messages.success(request, "Evento creado correctamente.")
         return redirect("pagina_de_inicio")
 
-    contexto = {"lugares": lugares_disponibles}
-
-    return render(request, "crear_evento.html", contexto)
+    return render(request, "crear_evento.html", {"lugares": lugares})
 
 
 @login_required(login_url="/login/")
@@ -219,14 +222,21 @@ def buscar_evento(request):
         messages.error(request, "No se encontró ningún evento con ese código.")
         return redirect("pagina_de_inicio")
 
-    return redirect("detalle_y_reserva", id_evento=evento.id)
+    return redirect("detalle_y_reserva", evento_id=evento.id)
+
 
 @login_required(login_url="/login/")
-def eliminar_evento(request, id_evento):
-    evento = get_object_or_404(Evento, pk=id_evento, usuario=request.user)
+def eliminar_evento(request, evento_id):
+    evento = get_object_or_404(
+        Evento,
+        id=evento_id,
+        organizador=request.user
+    )
 
     if request.method == "POST":
         evento.delete()
         messages.success(request, "Evento eliminado correctamente.")
+        return redirect("pagina_de_inicio")
 
+    messages.error(request, "No puedes eliminar este evento desde esa solicitud.")
     return redirect("pagina_de_inicio")
