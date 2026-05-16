@@ -16,9 +16,7 @@ class Evento(models.Model):
     servicios = models.TextField(blank=True, null=True)
     descripcion = models.TextField(blank=True, null=True)
     codigo_invitacion = models.CharField(
-        max_length=20,
-        unique=True,
-        default=generar_codigo_unico
+        max_length=20, unique=True, default=generar_codigo_unico
     )
 
     def __str__(self):
@@ -27,14 +25,10 @@ class Evento(models.Model):
 
 class Reservacion(models.Model):
     evento = models.ForeignKey(
-        Evento,
-        on_delete=models.CASCADE,
-        related_name="reservaciones"
+        Evento, on_delete=models.CASCADE, related_name="reservaciones"
     )
     usuario = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="reservaciones"
+        User, on_delete=models.CASCADE, related_name="reservaciones"
     )
     nombre_cliente = models.CharField(max_length=100)
     hora_reserva = models.TimeField()

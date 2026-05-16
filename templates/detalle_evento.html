@@ -26,8 +26,15 @@
         <div class="mt-8 cursor-pointer" onclick="toggleInformacionEvento()">
             <span
                 class="inline-block bg-indigo-100 text-indigo-600 px-4 py-2 rounded-full text-xs font-black uppercase">
-                Código: {{ evento.codigo_invitacion }}
+                Código:
+                <span id="codigo-evento">{{ evento.codigo_invitacion }}</span>
             </span>
+            <button type="button"
+                onclick="event.stopPropagation(); copiarCodigoEvento();"
+                class="ml-2 inline-flex w-9 h-9 items-center justify-center rounded-xl bg-white text-indigo-600 border border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all"
+                title="Copiar código">
+                <i class="fa fa-copy text-xs"></i>
+            </button>
 
             <h1 class="text-4xl font-black text-gray-900 mt-4">
                 {{ evento.nombre_evento }}
@@ -204,6 +211,46 @@
     function toggleInformacionEvento() {
         const info = document.getElementById("informacion-evento");
         info.classList.toggle("hidden");
+    }
+
+    async function copiarCodigoEvento() {
+        const codigo = document.getElementById("codigo-evento")?.textContent.trim();
+
+        if (!codigo) {
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(codigo);
+            mostrarAvisoCodigo("Código copiado");
+        } catch (error) {
+            const temporal = document.createElement("textarea");
+            temporal.value = codigo;
+            document.body.appendChild(temporal);
+            temporal.select();
+            document.execCommand("copy");
+            temporal.remove();
+            mostrarAvisoCodigo("Código copiado");
+        }
+    }
+
+    function mostrarAvisoCodigo(texto) {
+        let aviso = document.getElementById("aviso-codigo-copiado");
+
+        if (!aviso) {
+            aviso = document.createElement("div");
+            aviso.id = "aviso-codigo-copiado";
+            aviso.className = "fixed bottom-6 right-6 bg-gray-900 text-white px-5 py-3 rounded-2xl font-black shadow-xl z-50";
+            document.body.appendChild(aviso);
+        }
+
+        aviso.textContent = texto;
+        aviso.classList.remove("hidden");
+
+        clearTimeout(window.avisoCodigoTimeout);
+        window.avisoCodigoTimeout = setTimeout(() => {
+            aviso.classList.add("hidden");
+        }, 1800);
     }
 </script>
 {% endblock %}

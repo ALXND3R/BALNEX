@@ -6,7 +6,7 @@
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
 
-   
+
     .font-jakarta {
         font-family: 'Plus Jakarta Sans', sans-serif;
     }
@@ -34,9 +34,16 @@
                 </h1>
                 <p class="text-gray-500 mt-2 font-medium">Bienvenido de nuevo</p>
             </div>
-
+            
             <form method="POST" class="space-y-6" autocomplete="off">
                 {% csrf_token %}
+                {% if messages %}
+                {% for message in messages %}
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-xl mb-4">
+                    <span class="font-bold">{{ message }}</span>
+                </div>
+                {% endfor %}
+                {% endif %}
 
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2 ml-1">Correo Electrónico</label>
@@ -57,10 +64,9 @@
                             placeholder="••••••••">
                     </div>
 
-                    <div class="text-right mt-2">
-                        <a href="#" class="text-xs font-bold text-[#3d5afe] hover:underline">¿Olvidaste tu
-                            contraseña?</a>
-                    </div>
+                    <a href="{% url 'recuperar_password' %}"class="block text-center text-sm font-bold text-indigo-600 hover:text-indigo-800 mt-4">
+                        ¿Olvidaste tu contraseña?
+                    </a>
                 </div>
 
                 {% if error %}
