@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}BalNex | Estadísticas{% endblock %}
+
+{% block contenido %}
+<div class="min-h-screen bg-gray-50 py-12 px-4">
+    <div class="max-w-6xl mx-auto">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+            <div>
+                <a href="{% url 'detalle_y_reserva' evento.id %}" class="text-indigo-600 font-bold hover:text-pink-500">
+                    ← Volver al evento
+                </a>
+                <h1 class="text-4xl font-black text-gray-900 mt-4">
+                    Estadísticas de {{ evento.nombre_evento }}
+                </h1>
+                <p class="text-gray-500 font-bold mt-2">
+                    {{ evento.get_categoria_display }} · {{ evento.lugar }} · ${{ evento.precio_persona }} por persona
+                </p>
+            </div>
+
+            <a href="{% url 'notificaciones' %}"
+                class="relative w-fit bg-white border border-gray-100 text-indigo-600 px-5 py-3 rounded-2xl font-black hover:bg-indigo-600 hover:text-white transition-all">
+                <i class="fa fa-bell mr-2"></i>
+                Notificaciones
+                {% if notificaciones_no_leidas %}
+                <span class="ml-2 bg-pink-500 text-white px-2 py-1 rounded-full text-xs">
+                    {{ notificaciones_no_leidas }}
+                </span>
+                {% endif %}
+            </a>
+        </div>
+
+        <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6 mb-8">
+            <div class="flex justify-between items-center mb-3">
+                <p class="text-sm font-black text-gray-500 uppercase">Ocupación</p>
+                <p class="text-sm font-black text-indigo-600">{{ evento.porcentaje_ocupado }}%</p>
+            </div>
+            <div class="h-4 bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-green-400 to-green-600"
+                    style="width: {{ evento.porcentaje_ocupado }}%;"></div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm">
+                <p class="text-xs font-black text-gray-400 uppercase">Cupo máximo</p>
+                <p class="text-3xl font-black text-gray-900 mt-2">{{ evento.cupo_maximo }}</p>
+            </div>
+            <div class="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm">
+                <p class="text-xs font-black text-gray-400 uppercase">Lugares reservados</p>
+                <p class="text-3xl font-black text-indigo-600 mt-2">{{ evento.total_reservado }}</p>
+            </div>
+            <div class="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm">
+                <p class="text-xs font-black text-gray-400 uppercase">Lugares disponibles</p>
+                <p class="text-3xl font-black text-green-600 mt-2">{{ evento.disponible }}</p>
+            </div>
+            <div class="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm">
+                <p class="text-xs font-black text-gray-400 uppercase">Total de reservaciones</p>
+                <p class="text-3xl font-black text-gray-900 mt-2">{{ total_reservaciones }}</p>
+            </div>
+            <div class="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm">
+                <p class="text-xs font-black text-gray-400 uppercase">Total de asistentes</p>
+                <p class="text-3xl font-black text-pink-600 mt-2">{{ total_asistentes }}</p>
+            </div>
+            <div class="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm">
+                <p class="text-xs font-black text-gray-400 uppercase">Reservaciones pagadas / pendientes</p>
+                <p class="text-3xl font-black text-gray-900 mt-2">
+                    {{ reservaciones_pagadas }} / {{ reservaciones_pendientes }}
+                </p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm">
+                <p class="text-xs font-black text-gray-400 uppercase">Ingresos esperados</p>
+                <p class="text-3xl font-black text-gray-900 mt-2">${{ total_ingresos_esperados }}</p>
+            </div>
+            <div class="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm">
+                <p class="text-xs font-black text-gray-400 uppercase">Ingresos confirmados</p>
+                <p class="text-3xl font-black text-green-600 mt-2">${{ total_ingresos_confirmados }}</p>
+            </div>
+            <div class="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm">
+                <p class="text-xs font-black text-gray-400 uppercase">Pendiente por cobrar</p>
+                <p class="text-3xl font-black text-pink-600 mt-2">${{ total_pendiente_cobrar }}</p>
+            </div>
+        </div>
+
+        <section class="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm">
+            <h2 class="text-2xl font-black text-gray-900 mb-4">Historial reciente</h2>
+            <div class="space-y-3">
+                {% for actividad in historial %}
+                <div class="bg-gray-50 rounded-2xl p-4">
+                    <p class="font-bold text-gray-800">{{ actividad.mensaje }}</p>
+                    <p class="text-xs text-gray-400 font-bold mt-1">
+                        {{ actividad.fecha|date:"d/m/Y H:i" }}
+                        {% if actividad.usuario %} · {{ actividad.usuario.username }}{% endif %}
+                    </p>
+                </div>
+                {% empty %}
+                <p class="text-gray-500 font-bold">Aún no hay actividad registrada.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

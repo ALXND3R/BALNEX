@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}BalNex | Notificaciones{% endblock %}
+
+{% block contenido %}
+<div class="min-h-screen bg-gray-50 py-12 px-4">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+            <div>
+                <a href="{% url 'pagina_de_inicio' %}" class="text-indigo-600 font-bold hover:text-pink-500">
+                    ← Volver al panel
+                </a>
+                <h1 class="text-4xl font-black text-gray-900 mt-4">Notificaciones</h1>
+                <p class="text-gray-500 font-bold mt-2">
+                    Tienes {{ notificaciones_no_leidas }} notificación(es) sin leer.
+                </p>
+            </div>
+
+            <form method="POST" action="{% url 'marcar_todas_notificaciones_leidas' %}">
+                {% csrf_token %}
+                <button type="submit"
+                    class="bg-gray-900 text-white px-6 py-3 rounded-2xl font-black hover:bg-indigo-600 transition-all">
+                    Marcar todas como leídas
+                </button>
+            </form>
+        </div>
+
+        <div class="space-y-3">
+            {% for notificacion in notificaciones %}
+            <div
+                class="bg-white border {% if notificacion.leida %}border-gray-100{% else %}border-indigo-200{% endif %} rounded-[2rem] p-5 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <p class="font-black text-gray-900">{{ notificacion.mensaje }}</p>
+                    <p class="text-xs text-gray-400 font-bold mt-1">
+                        {{ notificacion.fecha|date:"d/m/Y H:i" }}
+                        {% if not notificacion.leida %} · Nueva{% endif %}
+                    </p>
+                </div>
+
+                <form method="POST" action="{% url 'marcar_notificacion_leida' notificacion.id %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-sm font-black hover:bg-indigo-600 hover:text-white transition-all">
+                        {% if notificacion.enlace %}Abrir{% else %}Marcar leída{% endif %}
+                    </button>
+                </form>
+            </div>
+            {% empty %}
+            <div class="bg-white border border-dashed border-gray-300 rounded-[2rem] p-10 text-center">
+                <i class="fa fa-bell text-4xl text-gray-300 mb-4"></i>
+                <p class="text-gray-500 font-bold">No tienes notificaciones.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

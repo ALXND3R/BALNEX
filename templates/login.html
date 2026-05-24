@@ -2,35 +2,14 @@
 
 {% block title %}Balnex | Iniciar Sesión{% endblock %}
 
-{% block extra_css %}
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-
-
-    .font-jakarta {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-
-    .bg-balnex {
-        background: linear-gradient(135deg, #3d5afe 0%, #ff3d77 100%);
-    }
-
-    .glass-login {
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-</style>
-{% endblock extra_css %}
-
 {% block contenido %}
-<div class="bg-balnex min-h-screen flex items-center justify-center p-4 font-jakarta w-full">
+<div class="min-h-screen flex items-center justify-center bg-gray-50 p-4 w-full">
 
-    <div class="glass-login w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden">
-        <div class="p-8 md:p-12">
+    <div class="w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div class="p-8 md:p-10">
             <div class="text-center mb-10">
-                <h1 class="text-4xl font-extrabold tracking-tighter text-[#3d5afe]">
-                    BAL<span class="text-[#ff3d77]">NEX</span>
+                <h1 class="text-3xl font-extrabold tracking-tight text-indigo-600">
+                    Bal<span class="text-pink-500">Nex</span>
                 </h1>
                 <p class="text-gray-500 mt-2 font-medium">Bienvenido de nuevo</p>
             </div>
@@ -46,12 +25,13 @@
                 {% endif %}
 
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2 ml-1">Correo Electrónico</label>
+                    <label class="block text-sm font-bold text-gray-700 mb-2 ml-1">Usuario</label>
                     <div class="relative">
-                        <i class="fa fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                        <input type="email" name="correo" autocomplete="username" value="{{ correo }}" required
-                            class="w-full pl-12 pr-4 py-4 rounded-2xl bg-white border border-gray-100 focus:border-[#3d5afe] focus:ring-4 focus:ring-blue-100 outline-none transition-all"
-                            placeholder="ejemplo@balnex.com">
+                        <i class="fa fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" name="username" autocomplete="username" value="{{ username }}" required
+                            minlength="3" maxlength="{{ FORM_LIMITS.username }}" pattern="[A-Za-z0-9_.-]{3,30}"
+                            class="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all"
+                            placeholder="tu_usuario">
                     </div>
                 </div>
 
@@ -60,7 +40,8 @@
                     <div class="relative">
                         <i class="fa fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
                         <input type="password" name="password" autocomplete="current-password" required
-                            class="w-full pl-12 pr-4 py-4 rounded-2xl bg-white border border-gray-100 focus:border-[#3d5afe] focus:ring-4 focus:ring-blue-100 outline-none transition-all"
+                            maxlength="{{ FORM_LIMITS.password }}"
+                            class="w-full pl-12 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all"
                             placeholder="••••••••">
                     </div>
 
@@ -74,7 +55,7 @@
                 {% endif %}
 
                 <button type="submit"
-                    class="w-full bg-black text-white py-4 rounded-2xl font-bold text-lg hover:bg-gray-800 transition-all shadow-lg active:scale-[0.98]">
+                    class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-base hover:bg-indigo-700 transition-all active:scale-[0.99]">
                     Entrar
                 </button>
 
@@ -82,27 +63,9 @@
 
             <div class="mt-10 text-center">
                 <p class="text-sm text-gray-500">¿No tienes cuenta?
-                    <a href="{% url 'register' %}" class="text-[#ff3d77] font-bold hover:underline">Regístrate
+                    <a href="{% url 'register' %}" class="text-pink-500 font-bold hover:underline">Regístrate
                         gratis</a>
                 </p>
-
-                <div class="flex items-center my-8 text-gray-300">
-                    <hr class="flex-grow border-gray-200">
-                    <span class="px-4 text-xs font-bold text-gray-400 uppercase">O continúa con</span>
-                    <hr class="flex-grow border-gray-200">
-                </div>
-
-                <div class="flex justify-center gap-4">
-                    <button
-                        class="p-4 bg-white rounded-2xl border border-gray-100 hover:bg-gray-50 transition shadow-sm">
-                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-6 h-6" alt="Google">
-                    </button>
-                    <button
-                        class="p-4 bg-white rounded-2xl border border-gray-100 hover:bg-gray-50 transition shadow-sm">
-                        <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" class="w-6 h-6"
-                            alt="Facebook">
-                    </button>
-                </div>
             </div>
         </div>
     </div>

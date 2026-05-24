@@ -1,25 +1,148 @@
+from decimal import Decimal
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.views.decorators.cache import never_cache
-from django.core.validators import validate_email
-from django.core.exceptions import ValidationError
 from django.urls import reverse
-from django.db.models import Sum
-from .models import Evento, Reservacion
+from .models import (
+    ActividadEvento,
+    Evento,
+    NotificacionInterna,
+    Reservacion,
+    ServicioExtra,
+)
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.utils import timezone
 
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from django.utils.encoding import force_str
+from .validation import (
+    LIMITS,
+    InputValidationError,
+    clean_decimal,
+    clean_email,
+    clean_future_date,
+    clean_id_list,
+    clean_int,
+    clean_invite_code,
+    clean_optional_password,
+    clean_password,
+    clean_text,
+    clean_time,
+    clean_username,
+)
+
+
+LUGARES_EVENTO = [
+    "Salón Diamante",
+    "Hacienda Balnex",
+    "Jardín Las Palmas",
+    "Terraza del Mar",
+    "Salón Imperial",
+    "Quinta Los Olivos",
+    "Centro de Convenciones",
+    "Salón Vista Alegre",
+    "Jardín Bugambilias",
+    "Hotel Coral Marina",
+]
+
+SERVICIOS_PREDEFINIDOS = [
+    ("Comida", "Servicio de alimentos para asistentes"),
+    ("Bebidas", "Bebidas durante el evento"),
+    ("Estacionamiento", "Acceso a estacionamiento"),
+    ("Zona VIP", "Acceso preferente o zona especial"),
+    ("Constancia", "Constancia digital o impresa"),
+    ("Material incluido", "Material de apoyo para asistentes"),
+]
+
+
+def render_error(request, template_name, context, message, status=200):
+    return render(request, template_name, {**context, "error": message}, status=status)
+
+
+def safe_message_error(request, message, redirect_name, *args, **kwargs):
+    messages.error(request, message)
+    return redirect(redirect_name, *args, **kwargs)
+
+
+def campo_servicio(nombre):
+    return (
+        nombre.lower()
+        .replace(" ", "_")
+        .replace("/", "_")
+        .replace("á", "a")
+        .replace("é", "e")
+        .replace("í", "i")
+        .replace("ó", "o")
+        .replace("ú", "u")
+    )
+
+
+def servicios_predefinidos_con_campo():
+    return [
+        {
+            "nombre": nombre,
+            "descripcion": descripcion,
+            "campo": campo_servicio(nombre),
+        }
+        for nombre, descripcion in SERVICIOS_PREDEFINIDOS
+    ]
+
+
+def registrar_actividad(evento, usuario, mensaje):
+    ActividadEvento.objects.create(evento=evento, usuario=usuario, mensaje=mensaje)
+
+
+def crear_notificacion(usuario, mensaje, enlace=""):
+    NotificacionInterna.objects.create(usuario=usuario, mensaje=mensaje, enlace=enlace)
+
+
+def notificaciones_no_leidas(usuario):
+    if not usuario.is_authenticated:
+        return 0
+
+    return usuario.notificaciones.filter(leida=False).count()
+
+
+def revisar_notificacion_ocupacion(evento):
+    if not evento.alcanzo_ocupacion(80):
+        return
+
+    mensaje = f"Tu evento {evento.nombre_evento} llegó al 80% de ocupación."
+    ya_existe = NotificacionInterna.objects.filter(
+        usuario=evento.organizador,
+        mensaje=mensaje,
+    ).exists()
+
+    if not ya_existe:
+        crear_notificacion(
+            evento.organizador,
+            mensaje,
+            reverse("estadisticas_evento", kwargs={"evento_id": evento.id}),
+        )
+
+
+def resumen_evento(evento):
+    total_reservado = evento.lugares_reservados()
+    disponible = evento.lugares_disponibles()
+    porcentaje_ocupado = evento.porcentaje_ocupacion()
+
+    evento.total_reservado = total_reservado
+    evento.disponible = disponible
+    evento.porcentaje_ocupado = porcentaje_ocupado
+    evento.total_esperado = evento.total_ingresos_esperados()
+    evento.total_pagado = evento.total_ingresos_confirmados()
+    evento.total_pendiente = evento.total_pendiente_cobrar()
+    evento.reservaciones_pagadas_total = evento.reservaciones_pagadas()
+    evento.reservaciones_pendientes_total = evento.reservaciones_pendientes()
+    return evento
 
 
 @method_decorator(never_cache, name="dispatch")
@@ -30,30 +153,36 @@ class VistaPaginaInicio(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        eventos = Evento.objects.filter(organizador=self.request.user).order_by("-id")
-
-        for evento in eventos:
-            total_reservado = (
-                evento.reservaciones.aggregate(total=Sum("numero_personas"))["total"]
-                or 0
+        try:
+            categoria = clean_text(
+                self.request.GET.get("categoria", ""),
+                "La categoría",
+                20,
             )
+        except InputValidationError:
+            categoria = ""
+        eventos = Evento.objects.filter(
+            organizador=self.request.user,
+            activo=True,
+        ).order_by("-id")
 
-            disponible = evento.cupo_maximo - total_reservado
+        if categoria and categoria in dict(Evento.CATEGORIAS):
+            eventos = eventos.filter(categoria=categoria)
+        elif categoria:
+            categoria = ""
 
-            if evento.cupo_maximo > 0:
-                porcentaje_ocupado = int((total_reservado / evento.cupo_maximo) * 100)
-            else:
-                porcentaje_ocupado = 0
-
-            evento.total_reservado = total_reservado
-            evento.disponible = disponible
-            evento.porcentaje_ocupado = porcentaje_ocupado
-
-        context["eventos"] = eventos
+        context["eventos"] = [resumen_evento(evento) for evento in eventos]
+        context["categorias"] = Evento.CATEGORIAS
+        context["categoria_actual"] = categoria
+        context["notificaciones_no_leidas"] = notificaciones_no_leidas(
+            self.request.user
+        )
 
         context["mis_reservaciones"] = (
             Reservacion.objects.filter(usuario=self.request.user)
+            .exclude(estado=Reservacion.ESTADO_CANCELADA)
             .select_related("evento")
+            .prefetch_related("servicios_extra")
             .order_by("evento__fecha_evento")
         )
 
@@ -66,53 +195,79 @@ class VistaPaginaAcercaDe(TemplateView):
 
 @never_cache
 def login_view(request):
-    correo = request.GET.get("correo", "")
+    username = ""
 
     if request.method == "POST":
-        correo = request.POST.get("correo")
-        password = request.POST.get("password")
-
         try:
-            user_obj = User.objects.get(email=correo)
-            user = authenticate(request, username=user_obj.username, password=password)
-        except User.DoesNotExist:
-            user = None
+            username = clean_text(
+                request.POST.get("username"),
+                "El usuario",
+                LIMITS["username"],
+                required=True,
+                min_length=3,
+            )
+            password = clean_optional_password(request.POST.get("password"))
+        except InputValidationError as exc:
+            return render_error(
+                request,
+                "login.html",
+                {"username": username},
+                str(exc),
+            )
+
+        user = authenticate(request, username=username, password=password)
 
         if user:
             login(request, user)
             return redirect("pagina_de_inicio")
-        else:
-            return render(
-                request, "login.html", {"error": "Datos incorrectos", "correo": correo}
-            )
 
-    return render(request, "login.html", {"correo": correo})
+        return render(
+            request,
+            "login.html",
+            {
+                "error": "Usuario o contraseña incorrectos.",
+                "username": username,
+            },
+        )
+
+    return render(request, "login.html", {"username": username})
 
 
 @never_cache
 def register_view(request):
     if request.method == "POST":
-        correo = request.POST.get("correo")
-        password = request.POST.get("password")
+        username = (request.POST.get("username") or "").strip()
+        correo = (request.POST.get("correo") or "").strip().lower()
+        contexto = {"username": username[: LIMITS["username"]], "correo": correo[: LIMITS["email"]]}
 
         try:
-            validate_email(correo)
-        except ValidationError:
-            return render(request, "register.html", {"error": "Correo no válido"})
+            username = clean_username(username)
+            correo = clean_email(correo)
+            password = clean_password(request.POST.get("password"))
+            confirmar_password = clean_password(
+                request.POST.get("confirmar_password"),
+                "La confirmación de contraseña",
+            )
+            contexto = {"username": username, "correo": correo}
+        except InputValidationError as exc:
+            return render_error(request, "register.html", contexto, str(exc))
+
+        if password != confirmar_password:
+            return render_error(request, "register.html", contexto, "Las contraseñas no coinciden.")
 
         if not correo.endswith(("gmail.com", ".mx", ".edu", ".org")):
-            return render(request, "register.html", {"error": "Dominio no permitido"})
+            return render_error(request, "register.html", contexto, "Dominio no permitido.")
 
-        if User.objects.filter(email=correo).exists():
-            return render(
-                request, "register.html", {"error": "El correo ya está registrado"}
-            )
+        if User.objects.filter(username__iexact=username).exists():
+            return render_error(request, "register.html", contexto, "El usuario ya está registrado.")
 
-        User.objects.create_user(username=correo, email=correo, password=password)
-        messages.success(request, "Cuenta creada con exito.")
+        if User.objects.filter(email__iexact=correo).exists():
+            return render_error(request, "register.html", contexto, "El correo ya está registrado.")
 
-        url_login = reverse("login")
-        return redirect(f"{url_login}?correo={correo}")
+        User.objects.create_user(username=username, email=correo, password=password)
+        messages.success(request, "Cuenta creada con éxito. Inicia sesión con tu usuario.")
+
+        return redirect("login")
 
     return render(request, "register.html")
 
@@ -124,20 +279,43 @@ def logout_view(request):
 
 @login_required
 def detalle_y_reserva(request, evento_id):
-    evento = get_object_or_404(Evento, id=evento_id)
-
-    es_organizador = evento.organizador == request.user
-
-    total_reservado = (
-        evento.reservaciones.aggregate(total=Sum("numero_personas"))["total"] or 0
+    evento = (
+        Evento.objects.prefetch_related("servicios_extra", "historial")
+        .filter(id=evento_id)
+        .first()
     )
 
-    disponible = evento.cupo_maximo - total_reservado
+    if evento is None:
+        messages.error(request, "El evento que intentas abrir no existe o ya no está disponible.")
+        return redirect("pagina_de_inicio")
+
+    es_organizador = evento.organizador == request.user
+    eventos_permitidos = request.session.get("eventos_permitidos", [])
+
+    total_reservado = evento.lugares_reservados()
+    disponible = evento.lugares_disponibles()
     esta_lleno = disponible <= 0
 
     ya_reservo = Reservacion.objects.filter(
         evento=evento, usuario=request.user
+    ).exclude(
+        estado=Reservacion.ESTADO_CANCELADA
     ).exists()
+
+    tiene_permiso_detalle = es_organizador or ya_reservo or evento.id in eventos_permitidos
+
+    if not evento.activo:
+        if request.method == "POST":
+            messages.error(request, "Este evento fue cancelado y ya no acepta reservaciones.")
+            return redirect("detalle_y_reserva", evento_id=evento.id)
+
+        if not tiene_permiso_detalle:
+            messages.error(request, "Este evento fue cancelado y ya no acepta reservaciones.")
+            return redirect("pagina_de_inicio")
+
+    if not tiene_permiso_detalle:
+        messages.error(request, "Busca el evento con su código de invitación para verlo.")
+        return redirect("pagina_de_inicio")
 
     if request.method == "POST":
 
@@ -147,17 +325,41 @@ def detalle_y_reserva(request, evento_id):
             )
             return redirect("detalle_y_reserva", evento_id=evento.id)
 
-        nombre_cliente = request.POST.get("nombre_cliente")
-        hora_reserva = request.POST.get("hora_reserva")
-
-        try:
-            numero_personas = int(request.POST.get("numero_personas", 1))
-        except ValueError:
-            messages.error(request, "El número de personas no es válido.")
+        if ya_reservo:
+            messages.error(
+                request,
+                "Ya tienes una reservación activa para este evento. Puedes editarla desde tu panel.",
+            )
             return redirect("detalle_y_reserva", evento_id=evento.id)
 
-        if numero_personas <= 0:
-            messages.error(request, "El número de personas debe ser mayor a 0.")
+        try:
+            nombre_cliente = clean_text(
+                request.POST.get("nombre_cliente"),
+                "El nombre",
+                100,
+                required=True,
+                min_length=2,
+            )
+            hora_reserva = clean_time(request.POST.get("hora_reserva"))
+            numero_personas = clean_int(
+                request.POST.get("numero_personas"),
+                "El número de personas",
+                min_value=1,
+                max_value=Reservacion.MAX_PERSONAS_POR_RESERVACION,
+            )
+            servicios_ids = clean_id_list(
+                request.POST.getlist("servicios_extra"),
+                "Servicios extras",
+            )
+        except InputValidationError as exc:
+            messages.error(request, str(exc))
+            return redirect("detalle_y_reserva", evento_id=evento.id)
+
+        if numero_personas > Reservacion.MAX_PERSONAS_POR_RESERVACION:
+            messages.error(
+                request,
+                f"Solo puedes reservar máximo {Reservacion.MAX_PERSONAS_POR_RESERVACION} personas por reservación.",
+            )
             return redirect("detalle_y_reserva", evento_id=evento.id)
 
         if numero_personas > disponible:
@@ -167,31 +369,52 @@ def detalle_y_reserva(request, evento_id):
             )
             return redirect("detalle_y_reserva", evento_id=evento.id)
 
-        reservacion_existente = Reservacion.objects.filter(
-            evento=evento, usuario=request.user
-        ).first()
+        servicios_extra = ServicioExtra.objects.filter(
+            id__in=servicios_ids, evento=evento, activo=True
+        )
 
-        if reservacion_existente:
-            reservacion_existente.numero_personas += numero_personas
-            reservacion_existente.nombre_cliente = nombre_cliente
-            reservacion_existente.hora_reserva = hora_reserva
-            reservacion_existente.save()
+        reservacion = Reservacion.objects.create(
+            evento=evento,
+            usuario=request.user,
+            nombre_cliente=nombre_cliente,
+            numero_personas=numero_personas,
+            hora_reserva=hora_reserva,
+            estado=Reservacion.ESTADO_PENDIENTE,
+        )
+        reservacion.servicios_extra.set(servicios_extra)
 
-            messages.success(request, "Tu reservación fue actualizada correctamente.")
-        else:
-            Reservacion.objects.create(
-                evento=evento,
-                usuario=request.user,
-                nombre_cliente=nombre_cliente,
-                numero_personas=numero_personas,
-                hora_reserva=hora_reserva,
-            )
+        registrar_actividad(
+            evento,
+            request.user,
+            f"Reservación creada para {numero_personas} persona(s).",
+        )
+        crear_notificacion(
+            evento.organizador,
+            f"{request.user.username} reservó {numero_personas} lugar(es) en {evento.nombre_evento}.",
+            reverse("detalle_y_reserva", kwargs={"evento_id": evento.id}),
+        )
+        revisar_notificacion_ocupacion(evento)
 
-            messages.success(request, "Asistencia confirmada correctamente.")
+        messages.success(
+            request,
+            f"Asistencia confirmada. Total de la reservación: ${reservacion.total_reservacion():.2f}.",
+        )
 
         return redirect("pagina_de_inicio")
 
-    reservaciones = evento.reservaciones.all().order_by("hora_reserva")
+    reservaciones = []
+    historial = []
+    if es_organizador:
+        reservaciones = (
+            evento.reservaciones.select_related("usuario")
+            .prefetch_related("servicios_extra")
+            .order_by("hora_reserva")
+        )
+        historial = evento.historial.select_related("usuario")[:15]
+    servicios_activos = evento.servicios_extra.filter(activo=True).order_by("nombre")
+    max_personas_permitidas = min(
+        disponible, Reservacion.MAX_PERSONAS_POR_RESERVACION
+    )
 
     return render(
         request,
@@ -204,55 +427,150 @@ def detalle_y_reserva(request, evento_id):
             "esta_lleno": esta_lleno,
             "ya_reservo": ya_reservo,
             "reservaciones": reservaciones,
+            "historial": historial,
+            "servicios_activos": servicios_activos,
+            "estados_reservacion": Reservacion.ESTADOS,
+            "max_personas_reservacion": Reservacion.MAX_PERSONAS_POR_RESERVACION,
+            "max_personas_permitidas": max_personas_permitidas,
+            "notificaciones_no_leidas": notificaciones_no_leidas(request.user),
         },
     )
 
 
 @login_required
 def crear_evento(request):
-    lugares = [
-        "Salón Diamante",
-        "Hacienda Balnex",
-        "Jardín Las Palmas",
-        "Terraza del Mar",
-        "Salón Imperial",
-        "Quinta Los Olivos",
-        "Centro de Convenciones",
-        "Salón Vista Alegre",
-        "Jardín Bugambilias",
-        "Hotel Coral Marina",
-    ]
-
     if request.method == "POST":
-        nombre_evento = request.POST.get("nombre_evento")
-        fecha_evento = request.POST.get("fecha_evento")
-        cantidad_invitados = request.POST.get("cantidad_invitados")
-        lugar = request.POST.get("lugar")
-        descripcion = request.POST.get("descripcion")
-        servicios = request.POST.getlist("servicios")
+        try:
+            nombre_evento = clean_text(
+                request.POST.get("nombre_evento"),
+                "El nombre del evento",
+                LIMITS["event_name"],
+                required=True,
+                min_length=3,
+            )
+            fecha_evento = clean_future_date(request.POST.get("fecha_evento"))
+            cantidad_invitados = clean_int(
+                request.POST.get("cantidad_invitados"),
+                "La cantidad de invitados",
+                min_value=1,
+                max_value=LIMITS["people"],
+            )
+            lugar = clean_text(
+                request.POST.get("lugar"),
+                "El lugar",
+                LIMITS["place"],
+                required=True,
+            )
+            categoria = clean_text(
+                request.POST.get("categoria") or Evento.CATEGORIA_GENERAL,
+                "La categoría",
+                20,
+                required=True,
+            )
+            precio_persona = clean_decimal(
+                request.POST.get("precio_persona"),
+                "El precio por persona",
+            )
+            descripcion = clean_text(
+                request.POST.get("descripcion"),
+                "La descripción",
+                LIMITS["description"],
+            )
+            servicios = [
+                clean_text(servicio, "El servicio", 50)
+                for servicio in request.POST.getlist("servicios")[:20]
+            ]
+            servicios_extra = request.POST.getlist("servicios_extra")[:20]
+            nombre_servicio_personalizado = clean_text(
+                request.POST.get("nombre_servicio_personalizado"),
+                "El nombre del servicio personalizado",
+                LIMITS["service_name"],
+            )
+            descripcion_servicio_personalizado = clean_text(
+                request.POST.get("descripcion_servicio_personalizado"),
+                "La descripción del servicio personalizado",
+                LIMITS["service_description"],
+            )
+            precio_servicio_personalizado = clean_decimal(
+                request.POST.get("precio_servicio_personalizado"),
+                "El precio del servicio personalizado",
+            )
+        except InputValidationError as exc:
+            return safe_message_error(request, str(exc), "crear_evento")
 
-        Evento.objects.create(
+        if categoria not in dict(Evento.CATEGORIAS):
+            return safe_message_error(request, "Selecciona una categoría válida.", "crear_evento")
+
+        if lugar not in LUGARES_EVENTO:
+            return safe_message_error(request, "Selecciona un lugar válido.", "crear_evento")
+
+        evento = Evento.objects.create(
             organizador=request.user,
             nombre_evento=nombre_evento,
             fecha_evento=fecha_evento,
             cupo_maximo=cantidad_invitados,
             lugar=lugar,
+            categoria=categoria,
+            precio_persona=precio_persona,
             descripcion=descripcion,
             servicios=", ".join(servicios),
         )
 
+        for nombre, descripcion_servicio in SERVICIOS_PREDEFINIDOS:
+            if nombre in servicios_extra:
+                try:
+                    precio = clean_decimal(
+                        request.POST.get(f"precio_servicio_{campo_servicio(nombre)}"),
+                        f"El precio de {nombre}",
+                    )
+                except InputValidationError as exc:
+                    return safe_message_error(request, str(exc), "crear_evento")
+                ServicioExtra.objects.create(
+                    evento=evento,
+                    nombre=nombre,
+                    descripcion=descripcion_servicio,
+                    precio=precio,
+                    activo=True,
+                )
+                registrar_actividad(
+                    evento, request.user, f"Servicio agregado: {nombre}."
+                )
+
+        if nombre_servicio_personalizado:
+            ServicioExtra.objects.create(
+                evento=evento,
+                nombre=nombre_servicio_personalizado,
+                descripcion=descripcion_servicio_personalizado,
+                precio=precio_servicio_personalizado,
+                activo=True,
+            )
+            registrar_actividad(
+                evento,
+                request.user,
+                f"Servicio agregado: {nombre_servicio_personalizado}.",
+            )
+
+        registrar_actividad(evento, request.user, "Evento creado.")
         messages.success(request, "Evento creado correctamente.")
         return redirect("pagina_de_inicio")
 
-    return render(request, "crear_evento.html", {"lugares": lugares})
+    return render(
+        request,
+        "crear_evento.html",
+        {
+            "lugares": LUGARES_EVENTO,
+            "categorias": Evento.CATEGORIAS,
+            "servicios_predefinidos": servicios_predefinidos_con_campo(),
+        },
+    )
 
 
 @login_required(login_url="/login/")
 def buscar_evento(request):
-    codigo = request.GET.get("codigo", "").strip().upper()
-
-    if not codigo:
-        messages.error(request, "Ingresa un código de invitación.")
+    try:
+        codigo = clean_invite_code(request.GET.get("codigo"))
+    except InputValidationError as exc:
+        messages.error(request, str(exc))
         return redirect("pagina_de_inicio")
 
     evento = Evento.objects.filter(codigo_invitacion=codigo).first()
@@ -260,6 +578,11 @@ def buscar_evento(request):
     if evento is None:
         messages.error(request, "No se encontró ningún evento con ese código.")
         return redirect("pagina_de_inicio")
+
+    eventos_permitidos = request.session.get("eventos_permitidos", [])
+    if evento.id not in eventos_permitidos:
+        eventos_permitidos.append(evento.id)
+        request.session["eventos_permitidos"] = eventos_permitidos
 
     return redirect("detalle_y_reserva", evento_id=evento.id)
 
@@ -269,22 +592,51 @@ def eliminar_evento(request, evento_id):
     evento = get_object_or_404(Evento, id=evento_id, organizador=request.user)
 
     if request.method == "POST":
-        evento.delete()
-        messages.success(request, "Evento eliminado correctamente.")
+        if not evento.activo:
+            messages.info(request, "Este evento ya estaba cancelado.")
+            return redirect("pagina_de_inicio")
+
+        evento.activo = False
+        evento.save(update_fields=["activo"])
+        registrar_actividad(evento, request.user, "Evento cancelado.")
+
+        for reservacion in evento.reservaciones.exclude(
+            estado=Reservacion.ESTADO_CANCELADA
+        ).select_related("usuario"):
+            crear_notificacion(
+                reservacion.usuario,
+                f"El evento {evento.nombre_evento} fue cancelado.",
+                reverse("detalle_y_reserva", kwargs={"evento_id": evento.id}),
+            )
+
+        messages.success(request, "Evento cancelado correctamente. Se conserva el historial y sus reservaciones.")
         return redirect("pagina_de_inicio")
 
-    messages.error(request, "No puedes eliminar este evento desde esa solicitud.")
+    messages.error(request, "No puedes cancelar este evento desde esa solicitud.")
     return redirect("pagina_de_inicio")
 
 
 @login_required(login_url="/login/")
 def cancelar_reservacion(request, reservacion_id):
     reservacion = get_object_or_404(
-        Reservacion, id=reservacion_id, usuario=request.user
+        Reservacion.objects.select_related("evento"),
+        id=reservacion_id,
+        usuario=request.user,
     )
 
     if request.method == "POST":
-        reservacion.delete()
+        reservacion.estado = Reservacion.ESTADO_CANCELADA
+        reservacion.save(update_fields=["estado"])
+        registrar_actividad(
+            reservacion.evento,
+            request.user,
+            f"Reservación cancelada por {reservacion.nombre_cliente}.",
+        )
+        crear_notificacion(
+            reservacion.evento.organizador,
+            f"{request.user.username} canceló su reservación en {reservacion.evento.nombre_evento}.",
+            reverse("detalle_y_reserva", kwargs={"evento_id": reservacion.evento.id}),
+        )
         messages.success(request, "Reservación cancelada correctamente.")
         return redirect("pagina_de_inicio")
 
@@ -295,38 +647,50 @@ def cancelar_reservacion(request, reservacion_id):
 @login_required(login_url="/login/")
 def editar_reservacion(request, reservacion_id):
     reservacion = get_object_or_404(
-        Reservacion.objects.select_related("evento"),
+        Reservacion.objects.select_related("evento").prefetch_related("servicios_extra"),
         id=reservacion_id,
         usuario=request.user,
     )
 
+    if reservacion.esta_cancelada():
+        messages.error(request, "No puedes editar una reservación cancelada.")
+        return redirect("pagina_de_inicio")
+
     evento = reservacion.evento
-    total_reservado = (
-        evento.reservaciones.aggregate(total=Sum("numero_personas"))["total"] or 0
-    )
+
+    if not evento.activo:
+        messages.error(request, "No puedes editar una reservación de un evento cancelado.")
+        return redirect("detalle_y_reserva", evento_id=evento.id)
+
+    total_reservado = evento.lugares_reservados()
     lugares_disponibles = evento.cupo_maximo - total_reservado
-    maximo_editable = lugares_disponibles + reservacion.numero_personas
+    maximo_editable = min(
+        lugares_disponibles + reservacion.numero_personas,
+        Reservacion.MAX_PERSONAS_POR_RESERVACION,
+    )
 
     if request.method == "POST":
-        nombre_cliente = request.POST.get("nombre_cliente", "").strip()
-        hora_reserva = request.POST.get("hora_reserva", "").strip()
-
         try:
-            numero_personas = int(request.POST.get("numero_personas", 1))
-        except ValueError:
-            messages.error(request, "El número de personas no es válido.")
-            return redirect("editar_reservacion", reservacion_id=reservacion.id)
-
-        if not nombre_cliente:
-            messages.error(request, "El nombre es obligatorio.")
-            return redirect("editar_reservacion", reservacion_id=reservacion.id)
-
-        if not hora_reserva:
-            messages.error(request, "La hora es obligatoria.")
-            return redirect("editar_reservacion", reservacion_id=reservacion.id)
-
-        if numero_personas <= 0:
-            messages.error(request, "El número de personas debe ser mayor a 0.")
+            nombre_cliente = clean_text(
+                request.POST.get("nombre_cliente"),
+                "El nombre",
+                100,
+                required=True,
+                min_length=2,
+            )
+            hora_reserva = clean_time(request.POST.get("hora_reserva"))
+            numero_personas = clean_int(
+                request.POST.get("numero_personas"),
+                "El número de personas",
+                min_value=1,
+                max_value=maximo_editable,
+            )
+            servicios_ids = clean_id_list(
+                request.POST.getlist("servicios_extra"),
+                "Servicios extras",
+            )
+        except InputValidationError as exc:
+            messages.error(request, str(exc))
             return redirect("editar_reservacion", reservacion_id=reservacion.id)
 
         if numero_personas > maximo_editable:
@@ -336,13 +700,26 @@ def editar_reservacion(request, reservacion_id):
             )
             return redirect("editar_reservacion", reservacion_id=reservacion.id)
 
+        servicios_extra = ServicioExtra.objects.filter(
+            id__in=servicios_ids, evento=evento, activo=True
+        )
+
         reservacion.nombre_cliente = nombre_cliente
         reservacion.hora_reserva = hora_reserva
         reservacion.numero_personas = numero_personas
         reservacion.save()
+        reservacion.servicios_extra.set(servicios_extra)
 
+        registrar_actividad(
+            evento,
+            request.user,
+            f"Reservación editada para {numero_personas} persona(s).",
+        )
         messages.success(request, "Reservación actualizada correctamente.")
         return redirect("pagina_de_inicio")
+
+    servicios_activos = evento.servicios_extra.filter(activo=True).order_by("nombre")
+    servicios_seleccionados = set(reservacion.servicios_extra.values_list("id", flat=True))
 
     return render(
         request,
@@ -351,6 +728,8 @@ def editar_reservacion(request, reservacion_id):
             "reservacion": reservacion,
             "evento": evento,
             "maximo_editable": maximo_editable,
+            "servicios_activos": servicios_activos,
+            "servicios_seleccionados": servicios_seleccionados,
         },
     )
 
@@ -359,22 +738,12 @@ def editar_reservacion(request, reservacion_id):
 def editar_evento(request, evento_id):
     evento = get_object_or_404(Evento, id=evento_id, organizador=request.user)
 
-    lugares = [
-        "Salón Diamante",
-        "Hacienda Balnex",
-        "Jardín Las Palmas",
-        "Terraza del Mar",
-        "Salón Imperial",
-        "Quinta Los Olivos",
-        "Centro de Convenciones",
-        "Salón Vista Alegre",
-        "Jardín Bugambilias",
-        "Hotel Coral Marina",
-    ]
+    if not evento.activo:
+        messages.error(request, "No puedes editar un evento cancelado.")
+        return redirect("detalle_y_reserva", evento_id=evento.id)
 
-    total_reservado = (
-        evento.reservaciones.aggregate(total=Sum("numero_personas"))["total"] or 0
-    )
+    lugares = LUGARES_EVENTO
+    total_reservado = evento.lugares_reservados()
 
     servicios_seleccionados = []
 
@@ -386,45 +755,63 @@ def editar_evento(request, evento_id):
     cupo_minimo = max(total_reservado, 1)
 
     if request.method == "POST":
-        nombre_evento = request.POST.get("nombre_evento", "").strip()
-        fecha_evento = request.POST.get("fecha_evento", "").strip()
-        cupo_maximo = request.POST.get("cupo_maximo", "").strip()
-        lugar = request.POST.get("lugar", "").strip()
-        descripcion = request.POST.get("descripcion", "").strip()
-        servicios = request.POST.getlist("servicios")
-
-        if not nombre_evento:
-            messages.error(request, "El nombre del evento es obligatorio.")
-            return redirect("editar_evento", evento_id=evento.id)
-
-        if not fecha_evento:
-            messages.error(request, "La fecha del evento es obligatoria.")
-            return redirect("editar_evento", evento_id=evento.id)
-
         try:
-            fecha_evento_convertida = timezone.datetime.strptime(
-                fecha_evento, "%Y-%m-%d"
-            ).date()
-        except ValueError:
-            messages.error(request, "La fecha del evento no es válida.")
-            return redirect("editar_evento", evento_id=evento.id)
-
-        if fecha_evento_convertida < timezone.localdate():
-            messages.error(request, "No puedes poner una fecha anterior a la actual.")
-            return redirect("editar_evento", evento_id=evento.id)
-
-        if not cupo_maximo:
-            messages.error(request, "El cupo máximo es obligatorio.")
-            return redirect("editar_evento", evento_id=evento.id)
-
-        try:
-            cupo_maximo = int(cupo_maximo)
-        except ValueError:
-            messages.error(request, "El cupo máximo debe ser un número válido.")
-            return redirect("editar_evento", evento_id=evento.id)
-
-        if cupo_maximo <= 0:
-            messages.error(request, "El cupo máximo debe ser mayor a 0.")
+            nombre_evento = clean_text(
+                request.POST.get("nombre_evento"),
+                "El nombre del evento",
+                LIMITS["event_name"],
+                required=True,
+                min_length=3,
+            )
+            fecha_evento_convertida = clean_future_date(request.POST.get("fecha_evento"))
+            cupo_maximo = clean_int(
+                request.POST.get("cupo_maximo"),
+                "El cupo máximo",
+                min_value=cupo_minimo,
+                max_value=LIMITS["people"],
+            )
+            lugar = clean_text(
+                request.POST.get("lugar"),
+                "El lugar",
+                LIMITS["place"],
+                required=True,
+            )
+            categoria = clean_text(
+                request.POST.get("categoria", Evento.CATEGORIA_GENERAL),
+                "La categoría",
+                20,
+                required=True,
+            )
+            precio_persona = clean_decimal(
+                request.POST.get("precio_persona"),
+                "El precio por persona",
+            )
+            descripcion = clean_text(
+                request.POST.get("descripcion"),
+                "La descripción",
+                LIMITS["description"],
+            )
+            servicios = [
+                clean_text(servicio, "El servicio", 50)
+                for servicio in request.POST.getlist("servicios")[:20]
+            ]
+            servicios_extra = request.POST.getlist("servicios_extra")[:20]
+            nombre_servicio_personalizado = clean_text(
+                request.POST.get("nombre_servicio_personalizado"),
+                "El nombre del servicio personalizado",
+                LIMITS["service_name"],
+            )
+            descripcion_servicio_personalizado = clean_text(
+                request.POST.get("descripcion_servicio_personalizado"),
+                "La descripción del servicio personalizado",
+                LIMITS["service_description"],
+            )
+            precio_servicio_personalizado = clean_decimal(
+                request.POST.get("precio_servicio_personalizado"),
+                "El precio del servicio personalizado",
+            )
+        except InputValidationError as exc:
+            messages.error(request, str(exc))
             return redirect("editar_evento", evento_id=evento.id)
 
         if cupo_maximo < total_reservado:
@@ -442,16 +829,126 @@ def editar_evento(request, evento_id):
             messages.error(request, "Selecciona un lugar válido.")
             return redirect("editar_evento", evento_id=evento.id)
 
+        if categoria not in dict(Evento.CATEGORIAS):
+            messages.error(request, "Selecciona una categoría válida.")
+            return redirect("editar_evento", evento_id=evento.id)
+
         evento.nombre_evento = nombre_evento
         evento.fecha_evento = fecha_evento_convertida
         evento.cupo_maximo = cupo_maximo
         evento.lugar = lugar
+        evento.categoria = categoria
+        evento.precio_persona = precio_persona
         evento.descripcion = descripcion
         evento.servicios = ", ".join(servicios)
         evento.save()
 
+        for servicio in servicios_predefinidos_con_campo():
+            nombre = servicio["nombre"]
+            activo = nombre in servicios_extra
+            try:
+                precio = clean_decimal(
+                    request.POST.get(f"precio_servicio_{servicio['campo']}"),
+                    f"El precio de {nombre}",
+                )
+            except InputValidationError as exc:
+                messages.error(request, str(exc))
+                return redirect("editar_evento", evento_id=evento.id)
+            servicio_obj, creado = ServicioExtra.objects.get_or_create(
+                evento=evento,
+                nombre=nombre,
+                defaults={
+                    "descripcion": servicio["descripcion"],
+                    "precio": precio,
+                    "activo": activo,
+                },
+            )
+
+            if not creado:
+                antes_activo = servicio_obj.activo
+                servicio_obj.descripcion = servicio["descripcion"]
+                servicio_obj.precio = precio
+                servicio_obj.activo = activo
+                servicio_obj.save()
+
+                if activo and not antes_activo:
+                    registrar_actividad(evento, request.user, f"Servicio agregado: {nombre}.")
+                elif antes_activo and not activo:
+                    registrar_actividad(evento, request.user, f"Servicio eliminado: {nombre}.")
+            elif activo:
+                registrar_actividad(evento, request.user, f"Servicio agregado: {nombre}.")
+
+        nombres_predefinidos = [nombre for nombre, _ in SERVICIOS_PREDEFINIDOS]
+        for servicio_obj in evento.servicios_extra.exclude(nombre__in=nombres_predefinidos):
+            antes_activo = servicio_obj.activo
+            servicio_obj.activo = (
+                request.POST.get(f"servicio_personalizado_activo_{servicio_obj.id}")
+                == "on"
+            )
+            try:
+                servicio_obj.descripcion = clean_text(
+                    request.POST.get(
+                        f"servicio_personalizado_descripcion_{servicio_obj.id}"
+                    ),
+                    "La descripción del servicio personalizado",
+                    LIMITS["service_description"],
+                )
+                servicio_obj.precio = clean_decimal(
+                    request.POST.get(
+                        f"servicio_personalizado_precio_{servicio_obj.id}"
+                    ),
+                    f"El precio de {servicio_obj.nombre}",
+                )
+            except InputValidationError as exc:
+                messages.error(request, str(exc))
+                return redirect("editar_evento", evento_id=evento.id)
+            servicio_obj.save()
+
+            if servicio_obj.activo and not antes_activo:
+                registrar_actividad(
+                    evento, request.user, f"Servicio agregado: {servicio_obj.nombre}."
+                )
+            elif antes_activo and not servicio_obj.activo:
+                registrar_actividad(
+                    evento, request.user, f"Servicio eliminado: {servicio_obj.nombre}."
+                )
+
+        if nombre_servicio_personalizado:
+            ServicioExtra.objects.create(
+                evento=evento,
+                nombre=nombre_servicio_personalizado,
+                descripcion=descripcion_servicio_personalizado,
+                precio=precio_servicio_personalizado,
+                activo=True,
+            )
+            registrar_actividad(
+                evento,
+                request.user,
+                f"Servicio agregado: {nombre_servicio_personalizado}.",
+            )
+
+        registrar_actividad(evento, request.user, "Evento editado.")
         messages.success(request, "Evento actualizado correctamente.")
         return redirect("pagina_de_inicio")
+
+    servicios_extra_actuales = {
+        servicio.nombre: servicio for servicio in evento.servicios_extra.all()
+    }
+    nombres_predefinidos = [nombre for nombre, _ in SERVICIOS_PREDEFINIDOS]
+    servicios_extra_personalizados = evento.servicios_extra.exclude(
+        nombre__in=nombres_predefinidos
+    ).order_by("nombre")
+    servicios_extra_form = []
+
+    for servicio in servicios_predefinidos_con_campo():
+        existente = servicios_extra_actuales.get(servicio["nombre"])
+        servicios_extra_form.append(
+            {
+                **servicio,
+                "activo": existente.activo if existente else False,
+                "precio": existente.precio if existente else Decimal("0.00"),
+            }
+        )
 
     return render(
         request,
@@ -459,11 +956,137 @@ def editar_evento(request, evento_id):
         {
             "evento": evento,
             "lugares": lugares,
+            "categorias": Evento.CATEGORIAS,
             "total_reservado": total_reservado,
             "servicios_seleccionados": servicios_seleccionados,
+            "servicios_extra_form": servicios_extra_form,
+            "servicios_extra_personalizados": servicios_extra_personalizados,
             "cupo_minimo": cupo_minimo,
         },
     )
+
+
+@login_required(login_url="/login/")
+def estadisticas_evento(request, evento_id):
+    evento = get_object_or_404(Evento, id=evento_id, organizador=request.user)
+    evento = resumen_evento(evento)
+
+    return render(
+        request,
+        "estadisticas_evento.html",
+        {
+            "evento": evento,
+            "total_reservaciones": evento.total_reservaciones(),
+            "total_asistentes": evento.total_asistentes(),
+            "total_ingresos_esperados": evento.total_ingresos_esperados(),
+            "total_ingresos_confirmados": evento.total_ingresos_confirmados(),
+            "total_pendiente_cobrar": evento.total_pendiente_cobrar(),
+            "reservaciones_pagadas": evento.reservaciones_pagadas(),
+            "reservaciones_pendientes": evento.reservaciones_pendientes(),
+            "historial": evento.historial.select_related("usuario")[:20],
+            "notificaciones_no_leidas": notificaciones_no_leidas(request.user),
+        },
+    )
+
+
+@login_required(login_url="/login/")
+def actualizar_estado_reservacion(request, reservacion_id):
+    reservacion = get_object_or_404(
+        Reservacion.objects.select_related("evento", "usuario"),
+        id=reservacion_id,
+        evento__organizador=request.user,
+    )
+    evento = reservacion.evento
+
+    if request.method != "POST":
+        messages.error(request, "No puedes cambiar el estado desde esa solicitud.")
+        return redirect("detalle_y_reserva", evento_id=evento.id)
+
+    try:
+        nuevo_estado = clean_text(request.POST.get("estado"), "El estado", 20, required=True)
+    except InputValidationError as exc:
+        messages.error(request, str(exc))
+        return redirect("detalle_y_reserva", evento_id=evento.id)
+    estados_validos = dict(Reservacion.ESTADOS)
+
+    if nuevo_estado not in estados_validos:
+        messages.error(request, "Selecciona un estado válido.")
+        return redirect("detalle_y_reserva", evento_id=evento.id)
+
+    estado_anterior = reservacion.estado
+    reservacion.estado = nuevo_estado
+    reservacion.save(update_fields=["estado"])
+
+    mensaje_estado = estados_validos[nuevo_estado].lower()
+    registrar_actividad(
+        evento,
+        request.user,
+        f"Reservación de {reservacion.nombre_cliente} marcada como {mensaje_estado}.",
+    )
+
+    if nuevo_estado == Reservacion.ESTADO_PAGADA:
+        crear_notificacion(
+            reservacion.usuario,
+            f"Tu pago para {evento.nombre_evento} fue confirmado.",
+            reverse("detalle_y_reserva", kwargs={"evento_id": evento.id}),
+        )
+        registrar_actividad(
+            evento,
+            request.user,
+            f"Reservación marcada como pagada: {reservacion.nombre_cliente}.",
+        )
+
+    if nuevo_estado == Reservacion.ESTADO_ASISTIO:
+        registrar_actividad(
+            evento,
+            request.user,
+            f"Reservación marcada como asistió: {reservacion.nombre_cliente}.",
+        )
+
+    if nuevo_estado == Reservacion.ESTADO_CANCELADA and estado_anterior != nuevo_estado:
+        crear_notificacion(
+            reservacion.usuario,
+            f"Tu reservación para {evento.nombre_evento} fue marcada como cancelada.",
+            reverse("detalle_y_reserva", kwargs={"evento_id": evento.id}),
+        )
+
+    revisar_notificacion_ocupacion(evento)
+    messages.success(request, "Estado de reservación actualizado.")
+    return redirect("detalle_y_reserva", evento_id=evento.id)
+
+
+@login_required(login_url="/login/")
+def notificaciones(request):
+    return render(
+        request,
+        "notificaciones.html",
+        {
+            "notificaciones": request.user.notificaciones.all(),
+            "notificaciones_no_leidas": notificaciones_no_leidas(request.user),
+        },
+    )
+
+
+@login_required(login_url="/login/")
+def marcar_notificacion_leida(request, notificacion_id):
+    notificacion = get_object_or_404(
+        NotificacionInterna, id=notificacion_id, usuario=request.user
+    )
+
+    if request.method == "POST":
+        notificacion.marcar_leida()
+        if notificacion.enlace:
+            return redirect(notificacion.enlace)
+
+    return redirect("notificaciones")
+
+
+@login_required(login_url="/login/")
+def marcar_todas_notificaciones_leidas(request):
+    if request.method == "POST":
+        request.user.notificaciones.filter(leida=False).update(leida=True)
+
+    return redirect("notificaciones")
 
 
 @never_cache
@@ -472,10 +1095,18 @@ def recuperar_password(request):
     correo = ""
 
     if request.method == "POST":
-        correo = request.POST.get("correo", "").strip()
+        try:
+            correo = clean_email(request.POST.get("correo"))
+        except InputValidationError as exc:
+            messages.error(request, str(exc))
+            return render(
+                request,
+                "recuperar_password.html",
+                {"correo": correo[: LIMITS["email"]], "enlace_recuperacion": enlace_recuperacion},
+            )
 
         try:
-            usuario = User.objects.get(email=correo)
+            usuario = User.objects.get(email__iexact=correo)
 
             uid = urlsafe_base64_encode(force_bytes(usuario.pk))
             token = default_token_generator.make_token(usuario)
@@ -507,11 +1138,17 @@ def cambiar_password(request, uidb64, token):
         return redirect("recuperar_password")
 
     if request.method == "POST":
-        nueva_password = request.POST.get("nueva_password", "").strip()
-        confirmar_password = request.POST.get("confirmar_password", "").strip()
-
-        if not nueva_password or not confirmar_password:
-            messages.error(request, "Debes llenar ambos campos.")
+        try:
+            nueva_password = clean_password(
+                request.POST.get("nueva_password"),
+                "La nueva contraseña",
+            )
+            confirmar_password = clean_password(
+                request.POST.get("confirmar_password"),
+                "La confirmación de contraseña",
+            )
+        except InputValidationError as exc:
+            messages.error(request, str(exc))
             return redirect("cambiar_password", uidb64=uidb64, token=token)
 
         if nueva_password != confirmar_password:
@@ -526,8 +1163,7 @@ def cambiar_password(request, uidb64, token):
             "Tu contraseña se cambió correctamente. Ahora puedes iniciar sesión.",
         )
 
-        url_login = reverse("login")
-        return redirect(f"{url_login}?correo={usuario.email}")
+        return redirect("login")
 
     return render(
         request,

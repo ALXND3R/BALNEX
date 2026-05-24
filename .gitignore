@@ -22,4 +22,5 @@ media/
 .DS_Store
 Thumbs.db
 
+.codex_deps/
 *.pyc

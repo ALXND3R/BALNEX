@@ -23,12 +23,30 @@
             ← Volver al inicio
         </a>
 
+        {% if es_organizador %}
+        <a href="{% url 'estadisticas_evento' evento.id %}"
+            class="ml-3 inline-block bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-black hover:bg-indigo-600 transition-all">
+            Ver estadísticas
+        </a>
+        {% endif %}
+
+        {% if not evento.activo %}
+        <div class="mt-6 p-5 rounded-2xl bg-red-50 border border-red-200 text-red-700 font-bold">
+            Este evento fue cancelado. No se permiten nuevas reservaciones, pero el historial y las reservaciones existentes se conservan.
+        </div>
+        {% endif %}
+
         <div class="mt-8 cursor-pointer" onclick="toggleInformacionEvento()">
             <span
                 class="inline-block bg-indigo-100 text-indigo-600 px-4 py-2 rounded-full text-xs font-black uppercase">
                 Código:
                 <span id="codigo-evento">{{ evento.codigo_invitacion }}</span>
             </span>
+            {% if not evento.activo %}
+            <span class="ml-2 inline-block bg-red-100 text-red-600 px-4 py-2 rounded-full text-xs font-black uppercase">
+                Cancelado
+            </span>
+            {% endif %}
             <button type="button"
                 onclick="event.stopPropagation(); copiarCodigoEvento();"
                 class="ml-2 inline-flex w-9 h-9 items-center justify-center rounded-xl bg-white text-indigo-600 border border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all"
@@ -75,15 +93,33 @@
                         {{ disponible }} lugares
                     </p>
                 </div>
+
+                <div class="bg-gray-50 p-5 rounded-2xl">
+                    <p class="text-xs font-black text-gray-400 uppercase">Categoría</p>
+                    <p class="text-lg font-bold text-gray-800">
+                        {{ evento.get_categoria_display }}
+                    </p>
+                </div>
+
+                <div class="bg-gray-50 p-5 rounded-2xl">
+                    <p class="text-xs font-black text-gray-400 uppercase">Precio por persona</p>
+                    <p class="text-lg font-bold text-gray-800">
+                        ${{ evento.precio_persona }}
+                    </p>
+                </div>
             </div>
 
             <div class="mt-6 bg-gray-50 p-5 rounded-2xl">
-                <p class="text-xs font-black text-gray-400 uppercase">Servicios</p>
+                <p class="text-xs font-black text-gray-400 uppercase">Servicios extras activos</p>
                 <p class="text-lg font-bold text-gray-800">
-                    {% if evento.servicios %}
-                    {{ evento.servicios }}
+                    {% if servicios_activos %}
+                    {% for servicio in servicios_activos %}
+                    <span class="inline-block bg-white border border-gray-100 px-3 py-2 rounded-xl mr-2 mb-2">
+                        {{ servicio.nombre }} · ${{ servicio.precio }}
+                    </span>
+                    {% endfor %}
                     {% else %}
-                    Sin servicios adicionales
+                    Sin servicios extras activos
                     {% endif %}
                 </p>
             </div>
@@ -120,6 +156,9 @@
                             <th class="px-5 py-4 text-xs font-black text-gray-500 uppercase">Nombre</th>
                             <th class="px-5 py-4 text-xs font-black text-gray-500 uppercase">Hora aprox. de llegada</th>
                             <th class="px-5 py-4 text-xs font-black text-gray-500 uppercase">Invitados</th>
+                            <th class="px-5 py-4 text-xs font-black text-gray-500 uppercase">Estado</th>
+                            <th class="px-5 py-4 text-xs font-black text-gray-500 uppercase">Total</th>
+                            <th class="px-5 py-4 text-xs font-black text-gray-500 uppercase">Cambiar estado</th>
                         </tr>
                     </thead>
 
@@ -135,6 +174,30 @@
                             <td class="px-5 py-4 text-gray-700">
                                 {{ reservacion.numero_personas }}
                             </td>
+                            <td class="px-5 py-4 text-gray-700">
+                                {{ reservacion.get_estado_display }}
+                            </td>
+                            <td class="px-5 py-4 text-gray-700 font-bold">
+                                ${{ reservacion.total_reservacion }}
+                            </td>
+                            <td class="px-5 py-4">
+                                <form method="POST" action="{% url 'actualizar_estado_reservacion' reservacion.id %}"
+                                    class="flex gap-2">
+                                    {% csrf_token %}
+                                    <select name="estado"
+                                        class="p-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold">
+                                        {% for valor, etiqueta in estados_reservacion %}
+                                        <option value="{{ valor }}" {% if reservacion.estado == valor %}selected{% endif %}>
+                                            {{ etiqueta }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit"
+                                        class="bg-indigo-600 text-white px-3 py-2 rounded-xl text-xs font-black hover:bg-indigo-700">
+                                        Guardar
+                                    </button>
+                                </form>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -147,6 +210,48 @@
                 </p>
             </div>
             {% endif %}
+        </div>
+
+        <div class="mt-10">
+            <h2 class="text-2xl font-black text-gray-900 mb-4">
+                Historial del evento
+            </h2>
+
+            <div class="space-y-3">
+                {% for actividad in historial %}
+                <div class="bg-gray-50 border border-gray-100 rounded-2xl p-4">
+                    <p class="font-bold text-gray-800">{{ actividad.mensaje }}</p>
+                    <p class="text-xs text-gray-400 font-bold mt-1">
+                        {{ actividad.fecha|date:"d/m/Y H:i" }}
+                        {% if actividad.usuario %} · {{ actividad.usuario.username }}{% endif %}
+                    </p>
+                </div>
+                {% empty %}
+                <div class="bg-gray-50 border border-dashed border-gray-300 rounded-2xl p-6 text-center">
+                    <p class="text-gray-500 font-bold">Aún no hay actividad registrada.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <a href="{% url 'pagina_de_inicio' %}"
+            class="mt-6 inline-block bg-gray-900 text-white px-8 py-4 rounded-2xl font-black hover:bg-indigo-600 transition-all">
+            Volver al panel principal
+        </a>
+
+        {% elif not evento.activo %}
+        <div class="mt-10 p-5 rounded-2xl bg-red-50 border border-red-200 text-red-700 font-bold">
+            Tu reservación queda guardada en el historial, pero el evento fue cancelado por el organizador.
+        </div>
+
+        <a href="{% url 'pagina_de_inicio' %}"
+            class="mt-6 inline-block bg-gray-900 text-white px-8 py-4 rounded-2xl font-black hover:bg-indigo-600 transition-all">
+            Volver al panel principal
+        </a>
+
+        {% elif ya_reservo %}
+        <div class="mt-10 p-5 rounded-2xl bg-indigo-50 text-indigo-700 font-bold">
+            Ya tienes una reservación activa para este evento. Puedes editarla desde tu panel.
         </div>
 
         <a href="{% url 'pagina_de_inicio' %}"
@@ -175,13 +280,18 @@
                 <div>
                     <label class="text-xs font-black text-gray-400 uppercase">Nombre</label>
                     <input type="text" name="nombre_cliente" required
+                        minlength="2" maxlength="100"
                         class="w-full mt-1 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
 
                 <div>
                     <label class="text-xs font-black text-gray-400 uppercase">Número de personas</label>
-                    <input type="number" name="numero_personas" min="1" max="{{ disponible }}" required
+                    <input type="number" name="numero_personas" min="1" max="{{ max_personas_permitidas }}"
+                        data-max-digits="2" required
                         class="w-full mt-1 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <p class="text-xs text-gray-400 font-bold mt-2">
+                        Disponibles: {{ disponible }} · Máximo por reservación: {{ max_personas_reservacion }}.
+                    </p>
                 </div>
 
                 <div>
@@ -189,6 +299,21 @@
                     <input type="time" name="hora_reserva" required
                         class="w-full mt-1 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
+
+                {% if servicios_activos %}
+                <div>
+                    <label class="text-xs font-black text-gray-400 uppercase">Servicios extras</label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                        {% for servicio in servicios_activos %}
+                        <label class="bg-gray-50 border border-gray-100 rounded-2xl p-4 font-bold text-gray-700">
+                            <input type="checkbox" name="servicios_extra" value="{{ servicio.id }}" class="mr-2">
+                            {{ servicio.nombre }}
+                            <span class="block text-xs text-gray-400 mt-1">${{ servicio.precio }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
 
                 <button type="submit"
                     class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black hover:bg-indigo-700 transition-all">

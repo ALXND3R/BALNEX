@@ -54,6 +54,7 @@
                             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nombre
                                 del Evento</label>
                             <input type="text" name="nombre_evento" placeholder="Ej. Boda de Ana y Juan" required
+                                minlength="3" maxlength="{{ FORM_LIMITS.event_name }}"
                                 class="w-full mt-1 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
                         </div>
 
@@ -67,7 +68,29 @@
                             <div>
                                 <label
                                     class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Invitados</label>
-                                <input type="number" name="cantidad_invitados" min="1" placeholder="0" required
+                                <input type="number" name="cantidad_invitados" min="1" max="{{ FORM_LIMITS.people }}"
+                                    data-max-digits="4" placeholder="0" required
+                                    class="w-full mt-1 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Categoría</label>
+                                <select name="categoria" required
+                                    class="w-full mt-1 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    {% for valor, etiqueta in categorias %}
+                                    <option value="{{ valor }}">{{ etiqueta }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label
+                                    class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Precio por persona</label>
+                                <input type="number" name="precio_persona" min="0" max="{{ FORM_LIMITS.money }}"
+                                    step="0.01" value="0.00" data-max-digits="7" required
                                     class="w-full mt-1 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none">
                             </div>
                         </div>
@@ -88,7 +111,7 @@
                             <label
                                 class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Descripción
                                 Breve</label>
-                            <textarea name="descripcion" rows="2" maxlength="500"
+                            <textarea name="descripcion" rows="2" maxlength="{{ FORM_LIMITS.description }}"
                                 placeholder="Escribe algo sobre el evento..."
                                 class="w-full mt-1 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none"></textarea>
                         </div>
@@ -99,56 +122,55 @@
                     <div class="flex items-center gap-3 mb-6">
                         <span
                             class="w-8 h-8 bg-pink-100 text-pink-500 rounded-lg flex items-center justify-center font-bold">2</span>
-                        <h2 class="text-xl font-black text-gray-800">Servicios Adicionales</h2>
+                        <h2 class="text-xl font-black text-gray-800">Servicios extras para asistentes</h2>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
-                        <label class="relative group cursor-pointer">
-                            <input type="checkbox" name="servicios" value="Catering" class="peer hidden">
-                            <div
-                                class="p-6 bg-white border border-gray-100 rounded-2xl text-center transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50 group-hover:shadow-md">
-                                <i class="fa fa-utensils text-gray-300 mb-2 block peer-checked:text-indigo-500"></i>
-                                <span
-                                    class="text-xs font-bold text-gray-500 peer-checked:text-indigo-600">Catering</span>
-                            </div>
-                        </label>
+                        {% for servicio in servicios_predefinidos %}
+                        <div class="bg-white border border-gray-100 rounded-2xl p-4">
+                            <label class="flex items-center gap-3 font-black text-gray-700">
+                                <input type="checkbox" name="servicios_extra" value="{{ servicio.nombre }}">
+                                {{ servicio.nombre }}
+                            </label>
+                            <p class="text-xs text-gray-400 font-bold mt-2">{{ servicio.descripcion }}</p>
+                            <input type="number" name="precio_servicio_{{ servicio.campo }}" min="0"
+                                max="{{ FORM_LIMITS.money }}" step="0.01" data-max-digits="7"
+                                value="0.00"
+                                class="w-full mt-3 p-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                                placeholder="Precio">
+                        </div>
+                        {% endfor %}
+                    </div>
 
-                        <label class="relative group cursor-pointer">
-                            <input type="checkbox" name="servicios" value="Fotografía" class="peer hidden">
-                            <div
-                                class="p-6 bg-white border border-gray-100 rounded-2xl text-center transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50 group-hover:shadow-md">
-                                <i class="fa fa-camera text-gray-300 mb-2 block peer-checked:text-indigo-500"></i>
-                                <span
-                                    class="text-xs font-bold text-gray-500 peer-checked:text-indigo-600">Fotografía</span>
-                            </div>
-                        </label>
-
-                        <label class="relative group cursor-pointer">
-                            <input type="checkbox" name="servicios" value="DJ / Audio" class="peer hidden">
-                            <div
-                                class="p-6 bg-white border border-gray-100 rounded-2xl text-center transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50 group-hover:shadow-md">
-                                <i class="fa fa-music text-gray-300 mb-2 block peer-checked:text-indigo-500"></i>
-                                <span class="text-xs font-bold text-gray-500 peer-checked:text-indigo-600">DJ /
-                                    Audio</span>
-                            </div>
-                        </label>
-
-                        <label class="relative group cursor-pointer">
-                            <input type="checkbox" name="servicios" value="Decoración" class="peer hidden">
-                            <div
-                                class="p-6 bg-white border border-gray-100 rounded-2xl text-center transition-all peer-checked:border-indigo-500 peer-checked:bg-indigo-50 group-hover:shadow-md">
-                                <i class="fa fa-magic text-gray-300 mb-2 block peer-checked:text-indigo-500"></i>
-                                <span
-                                    class="text-xs font-bold text-gray-500 peer-checked:text-indigo-600">Decoración</span>
-                            </div>
-                        </label>
+                    <div class="mt-6 bg-gray-50 border border-dashed border-gray-200 rounded-2xl p-5">
+                        <h3 class="text-sm font-black text-gray-700 uppercase mb-3">
+                            Servicio personalizado
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <input type="text" name="nombre_servicio_personalizado" placeholder="Nombre"
+                                maxlength="{{ FORM_LIMITS.service_name }}"
+                                class="p-3 bg-white border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <input type="text" name="descripcion_servicio_personalizado" placeholder="Descripción"
+                                maxlength="{{ FORM_LIMITS.service_description }}"
+                                class="p-3 bg-white border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <input type="number" name="precio_servicio_personalizado" min="0"
+                                max="{{ FORM_LIMITS.money }}" step="0.01" value="0.00" data-max-digits="7"
+                                class="p-3 bg-white border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
                     </div>
                 </div>
 
-                <button type="submit"
-                    class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 transition-all">
-                    Confirmar y Crear <i class="fa fa-chevron-right ml-2 text-sm opacity-50"></i>
-                </button>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <a href="{% url 'pagina_de_inicio' %}"
+                        class="w-full text-center bg-white text-indigo-600 border border-indigo-100 py-5 rounded-2xl font-black text-lg shadow-xl shadow-indigo-200 hover:bg-indigo-50 active:scale-95 transition-all">
+                        Cancelar
+                    </a>
+
+                    <button type="submit"
+                        class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 transition-all">
+                        Confirmar y Crear <i class="fa fa-chevron-right ml-2 text-sm opacity-50"></i>
+                    </button>
+                </div>
             </form>
         </div>
     </div>

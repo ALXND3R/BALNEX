@@ -13,9 +13,21 @@
         backdrop-filter: blur(10px);
     }
 
+    .card-hover {
+        transition: all 0.3s ease;
+    }
+
     .card-hover:hover {
         transform: translateY(-5px);
-        transition: all 0.3s ease;
+        box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
+    }
+
+    .soft-gradient {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(236, 72, 153, 0.08));
+    }
+
+    .feature-number {
+        background: linear-gradient(135deg, #667eea 0%, #ec4899 100%);
     }
 </style>
 {% endblock %}
@@ -25,14 +37,24 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16 items-center">
             <div class="flex items-center">
-                <a href="{% url 'pagina_de_inicio' %}" class="text-2xl font-bold text-indigo-600">Bal<span class="text-pink-500">Nex</span></a>
+                <a href="{% url 'pagina_de_inicio' %}" class="text-2xl font-bold text-indigo-600">
+                    Bal<span class="text-pink-500">Nex</span>
+                </a>
             </div>
+
             <div class="flex items-center gap-4">
                 {% if user.is_authenticated %}
-                    <a href="{% url 'pagina_de_inicio' %}" class="text-indigo-600 font-bold hover:text-pink-500 transition">Ir a mi Panel</a>
+                <a href="{% url 'pagina_de_inicio' %}" class="text-indigo-600 font-bold hover:text-pink-500 transition">
+                    Ir a mi Panel
+                </a>
                 {% else %}
-                    <a href="{% url 'login' %}" class="text-gray-500 hover:text-indigo-600 font-bold transition">Iniciar Sesión</a>
-                    <a href="{% url 'register' %}" class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-indigo-700 transition">Crear Cuenta</a>
+                <a href="{% url 'login' %}" class="text-gray-500 hover:text-indigo-600 font-bold transition">
+                    Iniciar Sesión
+                </a>
+                <a href="{% url 'register' %}"
+                    class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-indigo-700 transition">
+                    Crear Cuenta
+                </a>
                 {% endif %}
             </div>
         </div>
@@ -40,35 +62,73 @@
 </nav>
 
 <header class="gradient-bg py-20 px-4 text-white relative overflow-hidden">
+    <div class="absolute top-0 left-0 w-72 h-72 bg-white/10 rounded-full blur-3xl -translate-x-24 -translate-y-24">
+    </div>
+    <div class="absolute bottom-0 right-0 w-96 h-96 bg-pink-400/20 rounded-full blur-3xl translate-x-24 translate-y-24">
+    </div>
+
     <div class="max-w-7xl mx-auto flex flex-col items-center text-center relative z-10">
-        <span class="bg-white/20 px-4 py-1 rounded-full text-sm font-bold tracking-wider mb-6 uppercase">Conoce BalNex</span>
+        <span class="bg-white/20 px-4 py-1 rounded-full text-sm font-bold tracking-wider mb-6 uppercase">
+            Gestión inteligente de eventos
+        </span>
+
         <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight">
-            Revolucionando la forma en que <br> <span class="text-pink-300">vives los eventos</span>
+            Organiza, controla y monetiza <br>
+            <span class="text-pink-300">tus eventos en un solo lugar</span>
         </h1>
-        <p class="text-xl text-indigo-100 max-w-2xl">
-            Somos más que una plataforma de boletos. Somos tu socio estratégico para crear, gestionar y hacer explotar tus experiencias en vivo.
+
+        <p class="text-xl text-indigo-100 max-w-3xl">
+            BalNex es una plataforma diseñada para crear eventos, administrar reservaciones,
+            controlar cupos, analizar estadísticas, gestionar pagos, servicios extras y mantener
+            informado al organizador en tiempo real.
         </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 mt-10">
+            {% if user.is_authenticated %}
+            <a href="{% url 'pagina_de_inicio' %}"
+                class="bg-white text-indigo-600 px-6 py-3 rounded-2xl font-bold hover:bg-indigo-50 transition shadow-lg">
+                Ir a mi panel
+            </a>
+            {% else %}
+            <a href="{% url 'register' %}"
+                class="bg-white text-indigo-600 px-6 py-3 rounded-2xl font-bold hover:bg-indigo-50 transition shadow-lg">
+                Crear mi cuenta
+            </a>
+            <a href="{% url 'login' %}"
+                class="bg-white/10 border border-white/30 text-white px-6 py-3 rounded-2xl font-bold hover:bg-white/20 transition">
+                Iniciar sesión
+            </a>
+            {% endif %}
+        </div>
     </div>
 </header>
 
 <main class="max-w-7xl mx-auto px-4 py-16">
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-24">
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-24">
         <div>
-            <img src="https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&q=80&w=800" alt="Concierto" class="rounded-3xl shadow-2xl card-hover object-cover h-96 w-full">
+            <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=900"
+                alt="Gestión de eventos" class="rounded-3xl shadow-2xl card-hover object-cover h-96 w-full">
         </div>
+
         <div>
-            <h2 class="text-3xl font-extrabold text-gray-900 mb-6">Nuestro Objetivo y Meta</h2>
-            
+            <h2 class="text-3xl font-extrabold text-gray-900 mb-6">
+                Nuestro objetivo
+            </h2>
+
             <div class="mb-8">
                 <div class="flex items-center gap-3 mb-2">
                     <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
                         <i class="fa fa-bullseye text-lg"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-800">El Objetivo</h3>
+                    <h3 class="text-xl font-bold text-gray-800">
+                        Control total del evento
+                    </h3>
                 </div>
                 <p class="text-gray-600 leading-relaxed ml-14">
-                    Eliminar la fricción técnica y financiera para los creadores de eventos. Queremos que te enfoques en la magia de tu evento, mientras nosotros nos encargamos de que la venta y validación de boletos sea un proceso invisible y perfecto.
+                    Nuestro objetivo es que cada organizador pueda crear eventos, controlar
+                    reservaciones, revisar ingresos, administrar asistentes y tomar decisiones
+                    con datos claros, sin perderse entre hojas de cálculo, mensajes sueltos o listas incompletas.
                 </p>
             </div>
 
@@ -77,75 +137,303 @@
                     <div class="w-10 h-10 bg-pink-50 rounded-xl flex items-center justify-center text-pink-600">
                         <i class="fa fa-rocket text-lg"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-800">La Meta</h3>
+                    <h3 class="text-xl font-bold text-gray-800">
+                        Una plataforma lista para crecer
+                    </h3>
                 </div>
                 <p class="text-gray-600 leading-relaxed ml-14">
-                    Convertirnos en el ecosistema líder en Latinoamérica para la gestión de experiencias en vivo para el 2028, impulsando a más de 10,000 organizadores independientes a alcanzar el "Sold Out".
+                    BalNex busca convertirse en una herramienta completa para eventos pequeños,
+                    medianos y grandes, integrando finanzas, estadísticas, servicios extras,
+                    notificaciones e historial de actividad en una sola experiencia.
                 </p>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div class="text-center mb-24">
-        <h2 class="text-3xl font-extrabold text-gray-900 mb-4">¿Por qué somos tu mejor opción?</h2>
-        <p class="text-gray-500 max-w-2xl mx-auto mb-12">No solo procesamos pagos, construimos herramientas que hacen crecer tu comunidad.</p>
-        
+    <section class="text-center mb-24">
+        <span class="text-indigo-600 font-extrabold uppercase tracking-wider text-sm">
+            Funciones principales
+        </span>
+
+        <h2 class="text-3xl font-extrabold text-gray-900 mt-3 mb-4">
+            Todo lo que BalNex puede hacer por tu evento
+        </h2>
+
+        <p class="text-gray-500 max-w-2xl mx-auto mb-12">
+            No se trata solo de crear eventos. Se trata de administrarlos con claridad,
+            medir resultados y evitar errores antes de que se conviertan en caos con boleto.
+        </p>
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 card-hover text-left">
-                <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 mb-6">
-                    <i class="fa fa-bolt text-2xl"></i>
+                <div class="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center text-green-600 mb-6">
+                    <i class="fa fa-wallet text-2xl"></i>
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Velocidad Absoluta</h3>
-                <p class="text-gray-600">Nuestra infraestructura garantiza que tu venta de boletos no colapse, incluso si miles de fans intentan comprar al mismo milisegundo.</p>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">
+                    Finanzas del evento
+                </h3>
+                <p class="text-gray-600">
+                    Calcula ingresos esperados, pagos confirmados, dinero pendiente y totales por reservación,
+                    incluyendo precio base y servicios extras.
+                </p>
             </div>
 
             <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 card-hover text-left">
-                <div class="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center text-green-600 mb-6">
+                <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 mb-6">
                     <i class="fa fa-chart-pie text-2xl"></i>
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Analítica en Tiempo Real</h3>
-                <p class="text-gray-600">Conoce de dónde vienen tus compradores, a qué hora compran y qué estrategias de marketing te están funcionando mejor.</p>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">
+                    Panel de estadísticas
+                </h3>
+                <p class="text-gray-600">
+                    Visualiza cupo máximo, lugares reservados, lugares disponibles, porcentaje de ocupación,
+                    asistencia real e ingresos del evento.
+                </p>
             </div>
 
             <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 card-hover text-left">
                 <div class="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600 mb-6">
-                    <i class="fa fa-qrcode text-2xl"></i>
+                    <i class="fa fa-tags text-2xl"></i>
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">Acceso Inteligente</h3>
-                <p class="text-gray-600">Escanea cientos de boletos por minuto en la entrada de tu evento con nuestra tecnología anti-fraude y de lectura rápida.</p>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">
+                    Categorías de eventos
+                </h3>
+                <p class="text-gray-600">
+                    Clasifica eventos como conferencias, talleres, cursos, fiestas, eventos culturales,
+                    deportivos, académicos o empresariales.
+                </p>
+            </div>
+
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 card-hover text-left">
+                <div class="w-14 h-14 bg-pink-50 rounded-2xl flex items-center justify-center text-pink-600 mb-6">
+                    <i class="fa fa-users text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">
+                    Límite de reservación
+                </h3>
+                <p class="text-gray-600">
+                    Evita sobrecupos, reservaciones duplicadas y reservas del propio organizador.
+                    Cada lugar se controla como debe ser: sin magia negra, sin desorden.
+                </p>
+            </div>
+
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 card-hover text-left">
+                <div class="w-14 h-14 bg-yellow-50 rounded-2xl flex items-center justify-center text-yellow-600 mb-6">
+                    <i class="fa fa-clock-rotate-left text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">
+                    Historial de cambios
+                </h3>
+                <p class="text-gray-600">
+                    Registra acciones importantes como creación de eventos, cambios, reservaciones,
+                    cancelaciones, pagos confirmados y servicios modificados.
+                </p>
+            </div>
+
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 card-hover text-left">
+                <div class="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center text-red-600 mb-6">
+                    <i class="fa fa-bell text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">
+                    Notificaciones internas
+                </h3>
+                <p class="text-gray-600">
+                    Recibe avisos cuando alguien reserva, cancela, confirma pago o cuando un evento
+                    se acerca a su límite de ocupación.
+                </p>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div class="bg-gray-50 rounded-3xl p-8 md:p-12 border border-gray-100">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-            
-            <div>
-                <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                    <i class="fa fa-headset text-indigo-500"></i> Soporte Dedicado
-                </h2>
-                <p class="text-gray-600 mb-6">
-                    Sabemos que en el mundo de los eventos, el tiempo es oro. Nuestro equipo de soporte está disponible 24/7 para ayudarte a configurar tus eventos, resolver dudas de pago o asistirte durante el día del evento.
-                </p>
-                <a href="mailto:soporte@balnex.com" class="text-indigo-600 font-bold hover:text-pink-500 transition flex items-center gap-2">
-                    Contactar a Soporte <i class="fa fa-arrow-right"></i>
-                </a>
-            </div>
-
-            <div>
-                <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                    <i class="fa fa-shield-alt text-indigo-500"></i> Privacidad y Seguridad
-                </h2>
-                <p class="text-gray-600 mb-6">
-                    Tus datos y los de tus clientes son sagrados. Operamos bajo estrictos protocolos de encriptación de grado bancario (PCI-DSS) y garantizamos que la información de tus asistentes nunca será vendida a terceros.
-                </p>
-                <a href="#" class="text-indigo-600 font-bold hover:text-pink-500 transition flex items-center gap-2">
-                    Leer aviso de privacidad <i class="fa fa-arrow-right"></i>
-                </a>
-            </div>
-
+    <section class="soft-gradient rounded-3xl p-8 md:p-12 border border-indigo-100 mb-24">
+        <div class="text-center mb-12">
+            <span class="text-indigo-600 font-extrabold uppercase tracking-wider text-sm">
+                Flujo de trabajo
+            </span>
+            <h2 class="text-3xl font-extrabold text-gray-900 mt-3">
+                De la creación al control total
+            </h2>
+            <p class="text-gray-500 max-w-2xl mx-auto mt-4">
+                BalNex acompaña al organizador durante todo el ciclo del evento:
+                antes, durante y después.
+            </p>
         </div>
-    </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
+                <div
+                    class="feature-number w-10 h-10 rounded-xl text-white font-bold flex items-center justify-center mb-4">
+                    1
+                </div>
+                <h3 class="font-bold text-gray-900 mb-2">
+                    Crea el evento
+                </h3>
+                <p class="text-gray-600 text-sm">
+                    Define nombre, fecha, lugar, cupo, precio, categoría y descripción.
+                </p>
+            </div>
+
+            <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
+                <div
+                    class="feature-number w-10 h-10 rounded-xl text-white font-bold flex items-center justify-center mb-4">
+                    2
+                </div>
+                <h3 class="font-bold text-gray-900 mb-2">
+                    Recibe reservaciones
+                </h3>
+                <p class="text-gray-600 text-sm">
+                    Los usuarios reservan lugares respetando límites y disponibilidad.
+                </p>
+            </div>
+
+            <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
+                <div
+                    class="feature-number w-10 h-10 rounded-xl text-white font-bold flex items-center justify-center mb-4">
+                    3
+                </div>
+                <h3 class="font-bold text-gray-900 mb-2">
+                    Administra pagos
+                </h3>
+                <p class="text-gray-600 text-sm">
+                    Marca reservaciones como pagadas y consulta ingresos confirmados.
+                </p>
+            </div>
+
+            <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
+                <div
+                    class="feature-number w-10 h-10 rounded-xl text-white font-bold flex items-center justify-center mb-4">
+                    4
+                </div>
+                <h3 class="font-bold text-gray-900 mb-2">
+                    Analiza resultados
+                </h3>
+                <p class="text-gray-600 text-sm">
+                    Revisa asistencia, ocupación, historial e ingresos finales del evento.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-24">
+        <div class="bg-gray-50 rounded-3xl p-8 border border-gray-100">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                <i class="fa fa-plus-circle text-indigo-500"></i>
+                Servicios extras
+            </h2>
+            <p class="text-gray-600 mb-6">
+                Cada evento puede ofrecer servicios adicionales como comida, bebidas, estacionamiento,
+                zona VIP, constancias o materiales incluidos. Estos servicios pueden sumarse al total
+                de la reservación para calcular el costo final.
+            </p>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-white rounded-2xl p-4 border border-gray-100 font-semibold text-gray-700">
+                    <i class="fa fa-utensils text-pink-500 mr-2"></i> Comida
+                </div>
+                <div class="bg-white rounded-2xl p-4 border border-gray-100 font-semibold text-gray-700">
+                    <i class="fa fa-car text-indigo-500 mr-2"></i> Estacionamiento
+                </div>
+                <div class="bg-white rounded-2xl p-4 border border-gray-100 font-semibold text-gray-700">
+                    <i class="fa fa-star text-yellow-500 mr-2"></i> Zona VIP
+                </div>
+                <div class="bg-white rounded-2xl p-4 border border-gray-100 font-semibold text-gray-700">
+                    <i class="fa fa-certificate text-green-500 mr-2"></i> Constancia
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-50 rounded-3xl p-8 border border-gray-100">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+                <i class="fa fa-shield-alt text-indigo-500"></i>
+                Reservaciones seguras
+            </h2>
+            <p class="text-gray-600 mb-6">
+                BalNex valida las reservaciones para evitar errores comunes: usuarios duplicados,
+                lugares insuficientes, cupo excedido o intentos de reservar un evento propio.
+            </p>
+
+            <div class="space-y-4">
+                <div class="flex items-center gap-3 bg-white rounded-2xl p-4 border border-gray-100">
+                    <div class="w-9 h-9 bg-green-50 text-green-600 rounded-xl flex items-center justify-center">
+                        <i class="fa fa-check"></i>
+                    </div>
+                    <span class="text-gray-700 font-semibold">Control de cupo disponible</span>
+                </div>
+
+                <div class="flex items-center gap-3 bg-white rounded-2xl p-4 border border-gray-100">
+                    <div class="w-9 h-9 bg-green-50 text-green-600 rounded-xl flex items-center justify-center">
+                        <i class="fa fa-check"></i>
+                    </div>
+                    <span class="text-gray-700 font-semibold">Una reservación por usuario</span>
+                </div>
+
+                <div class="flex items-center gap-3 bg-white rounded-2xl p-4 border border-gray-100">
+                    <div class="w-9 h-9 bg-green-50 text-green-600 rounded-xl flex items-center justify-center">
+                        <i class="fa fa-check"></i>
+                    </div>
+                    <span class="text-gray-700 font-semibold">Estados de pago y asistencia</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="bg-gray-900 rounded-3xl p-8 md:p-12 text-white overflow-hidden relative">
+        <div
+            class="absolute top-0 right-0 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl translate-x-20 -translate-y-20">
+        </div>
+        <div
+            class="absolute bottom-0 left-0 w-72 h-72 bg-pink-500/20 rounded-full blur-3xl -translate-x-20 translate-y-20">
+        </div>
+
+        <div class="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div>
+                <span class="bg-white/10 px-4 py-1 rounded-full text-sm font-bold tracking-wider uppercase">
+                    Visión BalNex
+                </span>
+
+                <h2 class="text-3xl font-extrabold mt-6 mb-4">
+                    Que cada evento tenga datos claros, no corazonadas.
+                </h2>
+
+                <p class="text-gray-300 leading-relaxed mb-6">
+                    Queremos que cualquier organizador pueda saber cuántos lugares vendió,
+                    cuánto dinero recaudó, cuántos asistentes llegaron, qué servicios fueron elegidos
+                    y qué cambios ocurrieron en su evento.
+                </p>
+
+                <p class="text-gray-300 leading-relaxed">
+                    Un evento sin control es una piñata con WiFi: puede salir bien, pero nadie sabe cómo.
+                    BalNex busca que todo esté medido, ordenado y listo para crecer.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white/10 border border-white/10 rounded-3xl p-6 text-center">
+                    <i class="fa fa-calendar-check text-3xl text-pink-300 mb-4"></i>
+                    <h3 class="text-2xl font-extrabold">Eventos</h3>
+                    <p class="text-gray-300 text-sm mt-2">creados y administrados</p>
+                </div>
+
+                <div class="bg-white/10 border border-white/10 rounded-3xl p-6 text-center">
+                    <i class="fa fa-users text-3xl text-indigo-300 mb-4"></i>
+                    <h3 class="text-2xl font-extrabold">Reservas</h3>
+                    <p class="text-gray-300 text-sm mt-2">controladas por cupo</p>
+                </div>
+
+                <div class="bg-white/10 border border-white/10 rounded-3xl p-6 text-center">
+                    <i class="fa fa-wallet text-3xl text-green-300 mb-4"></i>
+                    <h3 class="text-2xl font-extrabold">Ingresos</h3>
+                    <p class="text-gray-300 text-sm mt-2">calculados automáticamente</p>
+                </div>
+
+                <div class="bg-white/10 border border-white/10 rounded-3xl p-6 text-center">
+                    <i class="fa fa-bell text-3xl text-yellow-300 mb-4"></i>
+                    <h3 class="text-2xl font-extrabold">Alertas</h3>
+                    <p class="text-gray-300 text-sm mt-2">para acciones importantes</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
 </main>
 

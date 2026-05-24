@@ -13,7 +13,12 @@ from .views import (
     eliminar_evento,
     editar_evento,
     editar_reservacion,
+    estadisticas_evento,
+    actualizar_estado_reservacion,
     cancelar_reservacion,
+    notificaciones,
+    marcar_notificacion_leida,
+    marcar_todas_notificaciones_leidas,
 )
 
 urlpatterns = [
@@ -23,6 +28,11 @@ urlpatterns = [
     path("crear-evento/", crear_evento, name="crear_evento"),
     path("buscar-evento/", buscar_evento, name="buscar_evento"),
     path("evento/<int:evento_id>/eliminar/", eliminar_evento, name="eliminar_evento"),
+    path(
+        "evento/<int:evento_id>/estadisticas/",
+        estadisticas_evento,
+        name="estadisticas_evento",
+    ),
     path("login/", login_view, name="login"),
     path("registro/", register_view, name="register"),
     path("logout/", logout_view, name="logout"),
@@ -33,9 +43,25 @@ urlpatterns = [
         name="editar_reservacion",
     ),
     path(
+        "reservacion/<int:reservacion_id>/estado/",
+        actualizar_estado_reservacion,
+        name="actualizar_estado_reservacion",
+    ),
+    path(
         "reservacion/<int:reservacion_id>/cancelar/",
         cancelar_reservacion,
         name="cancelar_reservacion",
+    ),
+    path("notificaciones/", notificaciones, name="notificaciones"),
+    path(
+        "notificaciones/<int:notificacion_id>/leer/",
+        marcar_notificacion_leida,
+        name="marcar_notificacion_leida",
+    ),
+    path(
+        "notificaciones/leer-todas/",
+        marcar_todas_notificaciones_leidas,
+        name="marcar_todas_notificaciones_leidas",
     ),
     path("recuperar-password/", recuperar_password, name="recuperar_password"),
     path("cambiar-password/<uidb64>/<token>/", cambiar_password, name="cambiar_password"),

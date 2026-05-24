@@ -29,7 +29,14 @@
 {% if messages %}
 <div class="max-w-4xl mx-auto px-4 mt-6">
     {% for message in messages %}
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-xl mb-2">
+    <div class="px-4 py-3 rounded-xl mb-2
+        {% if message.tags == 'error' %}
+            bg-red-100 border border-red-300 text-red-700
+        {% elif message.tags == 'info' %}
+            bg-indigo-100 border border-indigo-300 text-indigo-700
+        {% else %}
+            bg-green-100 border border-green-400 text-green-700
+        {% endif %}">
         <span class="block sm:inline font-bold">{{ message }}</span>
     </div>
     {% endfor %}
@@ -59,6 +66,7 @@
                 </label>
 
                 <input type="text" name="nombre_evento" value="{{ evento.nombre_evento }}" required
+                    minlength="3" maxlength="{{ FORM_LIMITS.event_name }}"
                     class="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold">
             </div>
 
@@ -68,7 +76,36 @@
                 </label>
 
                 <input type="date" name="fecha_evento" value="{{ evento.fecha_evento|date:'Y-m-d' }}" required
+                    min="{% now 'Y-m-d' %}"
                     class="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-black text-gray-700 uppercase mb-2">
+                        Categoría
+                    </label>
+
+                    <select name="categoria" required
+                        class="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold">
+                        {% for valor, etiqueta in categorias %}
+                        <option value="{{ valor }}" {% if evento.categoria == valor %}selected{% endif %}>
+                            {{ etiqueta }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-black text-gray-700 uppercase mb-2">
+                        Precio por persona
+                    </label>
+
+                    <input type="number" name="precio_persona" value="{{ evento.precio_persona }}" min="0"
+                        max="{{ FORM_LIMITS.money }}" step="0.01" data-max-digits="7"
+                        required
+                        class="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold">
+                </div>
             </div>
 
             <div>
@@ -81,7 +118,8 @@
                     name="cupo_maximo" 
                     value="{{ evento.cupo_maximo }}" 
                     min="{{ cupo_minimo }}" 
-                    max="1000"
+                    max="{{ FORM_LIMITS.people }}"
+                    data-max-digits="4"
                     required
                     class="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold"
                 >
@@ -111,48 +149,72 @@
 
             <div>
                 <label class="block text-sm font-black text-gray-700 uppercase mb-3">
-                    Servicios
+                    Servicios extras
                 </label>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                    <label class="flex items-center gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100 font-bold">
-                        <input type="checkbox" name="servicios" value="Música" {% if "Música" in servicios_seleccionados%}checked
-                        {% endif %}>
-                        Música
-                    </label>
-
-                    <label class="flex items-center gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100 font-bold">
-                        <input type="checkbox" name="servicios" value="Comida" {% if "Comida" in servicios_seleccionados%}checked
-                        {% endif %}>
-                        Comida
-                    </label>
-
-                    <label class="flex items-center gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100 font-bold">
-                        <input type="checkbox" name="servicios" value="Decoración" {% if "Decoración" in servicios_seleccionados %}checked
-                            {% endif %}>
-                        Decoración
-                    </label>
-
-                    <label class="flex items-center gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100 font-bold">
-                        <input type="checkbox" name="servicios" value="Fotografía" {% if "Fotografía" in servicios_seleccionados %}checked
-                        {% endif %}>
-                        Fotografía
-                    </label>
-
-                    <label class="flex items-center gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100 font-bold">
-                        <input type="checkbox" name="servicios" value="Iluminación" {% if "Iluminación" in servicios_seleccionados %}checked
-                        {% endif %}>
-                        Iluminación
-                    </label>
-
-                    <label class="flex items-center gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100 font-bold">
-                        <input type="checkbox" name="servicios" value="Meseros" {% if "Meseros" in servicios_seleccionados %}checked
-                        {% endif %}>
-                        Meseros
-                    </label>
-
+                    {% for servicio in servicios_extra_form %}
+                    <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                        <label class="flex items-center gap-3 font-bold text-gray-800">
+                            <input type="checkbox" name="servicios_extra" value="{{ servicio.nombre }}"
+                                {% if servicio.activo %}checked{% endif %}>
+                            {{ servicio.nombre }}
+                        </label>
+                        <p class="text-xs text-gray-400 font-bold mt-2">{{ servicio.descripcion }}</p>
+                        <input type="number" name="precio_servicio_{{ servicio.campo }}" min="0"
+                            max="{{ FORM_LIMITS.money }}" step="0.01" data-max-digits="7"
+                            value="{{ servicio.precio }}"
+                            class="w-full mt-3 p-3 bg-white border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                            placeholder="Precio">
+                    </div>
+                    {% endfor %}
                 </div>
+
+                <div class="mt-6 bg-gray-50 border border-dashed border-gray-200 rounded-2xl p-5">
+                    <h3 class="text-sm font-black text-gray-700 uppercase mb-3">
+                        Agregar servicio personalizado
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <input type="text" name="nombre_servicio_personalizado" placeholder="Nombre"
+                            maxlength="{{ FORM_LIMITS.service_name }}"
+                            class="p-3 bg-white border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <input type="text" name="descripcion_servicio_personalizado" placeholder="Descripción"
+                            maxlength="{{ FORM_LIMITS.service_description }}"
+                            class="p-3 bg-white border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <input type="number" name="precio_servicio_personalizado" min="0"
+                            max="{{ FORM_LIMITS.money }}" step="0.01" value="0.00" data-max-digits="7"
+                            class="p-3 bg-white border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                </div>
+
+                {% if servicios_extra_personalizados %}
+                <div class="mt-6 bg-gray-50 border border-gray-100 rounded-2xl p-5">
+                    <h3 class="text-sm font-black text-gray-700 uppercase mb-3">
+                        Servicios personalizados existentes
+                    </h3>
+                    <div class="space-y-3">
+                        {% for servicio in servicios_extra_personalizados %}
+                        <div class="bg-white border border-gray-100 rounded-2xl p-4">
+                            <label class="flex items-center gap-3 font-bold text-gray-800">
+                                <input type="checkbox" name="servicio_personalizado_activo_{{ servicio.id }}"
+                                    {% if servicio.activo %}checked{% endif %}>
+                                {{ servicio.nombre }}
+                            </label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                                <input type="text" name="servicio_personalizado_descripcion_{{ servicio.id }}"
+                                    value="{{ servicio.descripcion }}"
+                                    maxlength="{{ FORM_LIMITS.service_description }}"
+                                    class="p-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <input type="number" name="servicio_personalizado_precio_{{ servicio.id }}" min="0"
+                                    max="{{ FORM_LIMITS.money }}" step="0.01" value="{{ servicio.precio }}"
+                                    data-max-digits="7"
+                                    class="p-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
             </div>
 
             <div>
@@ -160,7 +222,7 @@
                     Descripción
                 </label>
 
-                <textarea name="descripcion" rows="5"
+                <textarea name="descripcion" rows="5" maxlength="{{ FORM_LIMITS.description }}"
                     class="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium">{{ evento.descripcion }}</textarea>
             </div>
 

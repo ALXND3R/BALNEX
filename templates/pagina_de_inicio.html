@@ -4,35 +4,96 @@
 
 {% block extra_css %}
 <style>
+    .page-bg {
+        background:
+            radial-gradient(circle at top left, rgba(99, 102, 241, 0.16), transparent 34rem),
+            radial-gradient(circle at top right, rgba(236, 72, 153, 0.14), transparent 32rem),
+            linear-gradient(180deg, #f8fafc 0%, #ffffff 45%, #f8fafc 100%);
+    }
+
     .gradient-bg {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background:
+            radial-gradient(circle at 15% 20%, rgba(255, 255, 255, 0.24), transparent 18rem),
+            radial-gradient(circle at 85% 15%, rgba(236, 72, 153, 0.28), transparent 20rem),
+            linear-gradient(135deg, #4f46e5 0%, #7c3aed 48%, #ec4899 100%);
     }
 
     .glass {
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.78);
+        backdrop-filter: blur(18px);
+        border: 1px solid rgba(255, 255, 255, 0.55);
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    }
+
+    .soft-card {
+        background: rgba(255, 255, 255, 0.86);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
     }
 
     .card-hover {
-        transition: all 0.3s ease;
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
     }
 
     .card-hover:hover {
         transform: translateY(-4px);
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
-            0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        box-shadow: 0 24px 55px rgba(15, 23, 42, 0.1);
+        border-color: rgba(99, 102, 241, 0.28);
+    }
+
+    .nav-link {
+        position: relative;
+    }
+
+    .nav-link::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: 1.35rem;
+        width: 0;
+        height: 2px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #4f46e5, #ec4899);
+        transition: width 0.25s ease;
+    }
+
+    .nav-link:hover::after,
+    .nav-link-active::after {
+        width: 100%;
+    }
+
+    .event-card {
+        background:
+            linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.86)),
+            radial-gradient(circle at top left, rgba(99, 102, 241, 0.12), transparent 16rem);
+    }
+
+    .modern-scroll::-webkit-scrollbar {
+        height: 8px;
+        width: 8px;
+    }
+
+    .modern-scroll::-webkit-scrollbar-thumb {
+        background: #c7d2fe;
+        border-radius: 999px;
     }
 </style>
 {% endblock %}
 
 {% block contenido %}
 
-<nav class="glass sticky top-0 z-50 border-b border-white/20">
+<div class="page-bg min-h-screen">
+
+<nav class="glass sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-20 items-center">
 
-            <div class="flex items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-600 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                    <i class="fa fa-calendar-check"></i>
+                </div>
+
                 <span class="text-3xl md:text-4xl font-black tracking-tighter text-indigo-600">
                     Bal<span class="text-pink-500">Nex</span>
                 </span>
@@ -40,26 +101,26 @@
 
             <div class="hidden md:flex space-x-10">
                 <a href="{% url 'pagina_de_inicio' %}"
-                    class="text-indigo-600 border-b-2 border-indigo-600 font-bold py-7">
+                    class="nav-link nav-link-active text-indigo-600 font-black py-7">
                     Panel
                 </a>
 
                 <a href="#eventos-organizados"
-                    class="text-gray-500 hover:text-indigo-600 font-semibold py-7 transition-all">
+                    class="nav-link text-gray-500 hover:text-indigo-600 font-bold py-7 transition-all">
                     Eventos
                 </a>
 
                 <a href="#mis-asistencias"
-                    class="text-gray-500 hover:text-indigo-600 font-semibold py-7 transition-all flex items-center gap-2">
+                    class="nav-link text-gray-500 hover:text-indigo-600 font-bold py-7 transition-all flex items-center gap-2">
                     <i class="fa fa-ticket-alt text-xs opacity-50"></i>
                     Mis Asistencias
                 </a>
             </div>
 
-            <div class="flex items-center gap-4">
-                <div class="hidden sm:flex items-center bg-indigo-50 px-4 py-2 rounded-2xl border border-indigo-100">
+            <div class="flex items-center gap-3">
+                <div class="hidden sm:flex items-center bg-white/80 px-4 py-2 rounded-2xl border border-indigo-100 shadow-sm">
                     <i class="fa fa-user-circle text-indigo-500 mr-2"></i>
-                    <span class="text-sm font-bold text-indigo-900">
+                    <span class="text-sm font-black text-indigo-950">
                         {% if user.is_authenticated %}
                         {{ user.username }}
                         {% else %}
@@ -68,16 +129,28 @@
                     </span>
                 </div>
 
+                <a href="{% url 'notificaciones' %}"
+                    class="relative w-11 h-11 flex items-center justify-center rounded-2xl bg-white text-indigo-500 hover:bg-indigo-600 hover:text-white transition-all shadow-sm border border-indigo-100"
+                    title="Notificaciones">
+                    <i class="fa fa-bell"></i>
+                    {% if notificaciones_no_leidas %}
+                    <span
+                        class="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-pink-500 text-white text-[10px] font-black rounded-full flex items-center justify-center ring-4 ring-white">
+                        {{ notificaciones_no_leidas }}
+                    </span>
+                    {% endif %}
+                </a>
+
                 <a href="{% url 'logout' %}"
-                    class="w-10 h-10 flex items-center justify-center rounded-xl bg-pink-50 text-pink-500 hover:bg-pink-500 hover:text-white transition-all shadow-sm"
+                    class="w-11 h-11 flex items-center justify-center rounded-2xl bg-white text-pink-500 hover:bg-pink-500 hover:text-white transition-all shadow-sm border border-pink-100"
                     title="Salir">
                     <i class="fa fa-sign-out-alt"></i>
                 </a>
 
-                <div class="h-8 w-[1px] bg-gray-200"></div>
+                <div class="hidden sm:block h-8 w-[1px] bg-gray-200"></div>
 
                 <a href="{% url 'acerca_de' %}"
-                    class="hidden sm:block px-5 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-indigo-600 transition shadow-lg shadow-indigo-200">
+                    class="hidden sm:block px-5 py-2.5 bg-gray-950 text-white rounded-2xl text-sm font-black hover:bg-indigo-600 transition shadow-lg shadow-indigo-100">
                     Ayuda
                 </a>
             </div>
@@ -87,105 +160,205 @@
 </nav>
 
 {% if messages %}
-<div class="max-w-7xl mx-auto px-4 mt-4">
+<div class="max-w-7xl mx-auto px-4 mt-5">
     {% for message in messages %}
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-2">
-        <span class="block sm:inline font-bold">{{ message }}</span>
+    <div class="px-5 py-4 rounded-2xl shadow-sm mb-2
+        {% if message.tags == 'error' %}
+            bg-red-50 border border-red-200 text-red-700
+        {% elif message.tags == 'info' %}
+            bg-indigo-50 border border-indigo-200 text-indigo-700
+        {% else %}
+            bg-emerald-50 border border-emerald-200 text-emerald-700
+        {% endif %}">
+        <span class="block sm:inline font-black">{{ message }}</span>
     </div>
     {% endfor %}
 </div>
 {% endif %}
 
-<header class="gradient-bg py-20 px-4 text-white relative overflow-hidden mt-4">
-    <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-10 rounded-full -mr-20 -mt-20"></div>
-    <div class="absolute bottom-0 left-0 w-40 h-40 bg-pink-500 opacity-20 rounded-full -ml-10 -mb-10"></div>
+<header class="max-w-7xl mx-auto px-4 pt-8">
+    <div class="gradient-bg rounded-[2.5rem] py-16 md:py-20 px-6 md:px-12 text-white relative overflow-hidden shadow-2xl shadow-indigo-200">
+        <div class="absolute top-0 right-0 w-72 h-72 bg-white/10 rounded-full blur-3xl -mr-24 -mt-24"></div>
+        <div class="absolute bottom-0 left-0 w-72 h-72 bg-pink-500/20 rounded-full blur-3xl -ml-24 -mb-24"></div>
 
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center relative z-10">
-        <div class="text-center md:text-left">
-            <h1 class="text-5xl md:text-6xl font-black mb-4">
-                ¡Hola
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-white">
-                    de nuevo!
+        <div class="relative z-10 flex flex-col lg:flex-row justify-between items-center gap-10">
+            <div class="text-center lg:text-left max-w-2xl">
+                <span class="inline-flex items-center gap-2 bg-white/15 border border-white/20 px-4 py-2 rounded-full text-sm font-black uppercase tracking-widest mb-5">
+                    <i class="fa fa-sparkles"></i>
+                    Panel de control
                 </span>
-            </h1>
 
-            <p class="text-xl text-indigo-100 font-light max-w-lg italic">
-                Organiza, asiste y disfruta de tus eventos.
-            </p>
-        </div>
+                <h1 class="text-5xl md:text-7xl font-black mb-5 tracking-tight">
+                    ¡Hola
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-200 to-white">
+                        de nuevo!
+                    </span>
+                </h1>
 
-        <div class="mt-10 md:mt-0">
-            <a href="{% url 'crear_evento' %}"
-                class="group bg-white text-indigo-600 px-10 py-5 rounded-2xl font-black text-xl shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-4">
-                <span
-                    class="bg-indigo-600 text-white w-8 h-8 rounded-lg flex items-center justify-center group-hover:rotate-90 transition-transform">
-                    <i class="fa fa-plus"></i>
-                </span>
-                Crear Evento
-            </a>
+                <p class="text-xl text-indigo-100 font-medium max-w-xl">
+                    Organiza eventos, controla reservaciones, revisa estadísticas y mantén todo en orden desde un solo lugar.
+                </p>
+
+                <div class="grid grid-cols-3 gap-3 mt-8 max-w-xl">
+                    <div class="bg-white/12 border border-white/15 rounded-2xl p-4">
+                        <p class="text-2xl font-black">{{ eventos|length }}</p>
+                        <p class="text-xs text-indigo-100 font-bold uppercase">Eventos</p>
+                    </div>
+
+                    <div class="bg-white/12 border border-white/15 rounded-2xl p-4">
+                        <p class="text-2xl font-black">{{ mis_reservaciones|length }}</p>
+                        <p class="text-xs text-indigo-100 font-bold uppercase">Asistencias</p>
+                    </div>
+
+                    <div class="bg-white/12 border border-white/15 rounded-2xl p-4">
+                        <p class="text-2xl font-black">
+                            {% if notificaciones_no_leidas %}
+                            {{ notificaciones_no_leidas }}
+                            {% else %}
+                            0
+                            {% endif %}
+                        </p>
+                        <p class="text-xs text-indigo-100 font-bold uppercase">Alertas</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full lg:w-auto flex flex-col gap-4">
+                <a href="{% url 'crear_evento' %}"
+                    class="group bg-white text-indigo-600 px-10 py-5 rounded-3xl font-black text-xl shadow-2xl hover:scale-[1.03] active:scale-95 transition-all flex items-center justify-center gap-4">
+                    <span
+                        class="bg-indigo-600 text-white w-9 h-9 rounded-xl flex items-center justify-center group-hover:rotate-90 transition-transform">
+                        <i class="fa fa-plus"></i>
+                    </span>
+                    Crear Evento
+                </a>
+
+                <a href="#eventos-organizados"
+                    class="bg-white/10 border border-white/20 text-white px-10 py-4 rounded-3xl font-black text-center hover:bg-white/20 transition-all">
+                    Ver mis eventos
+                </a>
+            </div>
         </div>
     </div>
 </header>
 
-<main class="max-w-7xl mx-auto px-4 py-16">
+<main class="max-w-7xl mx-auto px-4 py-14">
 
-    <section class="mb-12 bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100">
-        <h2 class="text-2xl font-black text-gray-800 mb-4">
-            Buscar evento por código
-        </h2>
+    <section class="mb-12 soft-card p-6 md:p-8 rounded-[2rem]">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-5">
+            <div>
+                <span class="text-xs font-black text-indigo-500 uppercase tracking-widest">
+                    Acceso rápido
+                </span>
+                <h2 class="text-2xl md:text-3xl font-black text-gray-900 mt-1">
+                    Buscar evento por código
+                </h2>
+            </div>
+
+            <div class="hidden md:flex w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 items-center justify-center">
+                <i class="fa fa-search text-xl"></i>
+            </div>
+        </div>
 
         <form method="GET" action="{% url 'buscar_evento' %}" class="flex flex-col md:flex-row gap-4">
-            <input type="text" name="codigo" placeholder="Ej. A1B2C3D4" required
-                class="flex-1 p-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none uppercase">
+            <div class="relative flex-1">
+                <i class="fa fa-key absolute left-5 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" name="codigo" placeholder="Ej. A1B2C3D4" required
+                    maxlength="{{ FORM_LIMITS.invite_code }}" pattern="[A-Za-z0-9]{1,20}"
+                    class="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 outline-none uppercase font-black tracking-widest">
+            </div>
 
             <button type="submit"
-                class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black hover:bg-indigo-700 transition-all">
+                class="bg-gray-950 text-white px-8 py-4 rounded-2xl font-black hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-100">
                 Buscar
             </button>
         </form>
     </section>
 
     <section id="eventos-organizados" class="mb-20">
-        <div class="flex justify-between items-end mb-8">
-            <h2 class="text-3xl font-black text-gray-800 tracking-tight">
-                Eventos que organizas
-            </h2>
+        <div class="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-5 mb-8">
+            <div>
+                <span class="text-xs font-black text-pink-500 uppercase tracking-widest">
+                    Administración
+                </span>
+                <h2 class="text-3xl md:text-4xl font-black text-gray-900 tracking-tight mt-1">
+                    Eventos que organizas
+                </h2>
+            </div>
+
+            <form method="GET" class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                <select name="categoria"
+                    class="min-w-64 p-4 bg-white border border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 outline-none font-black shadow-sm">
+                    <option value="">Todas las categorías</option>
+                    {% for valor, etiqueta in categorias %}
+                    <option value="{{ valor }}" {% if categoria_actual == valor %}selected{% endif %}>
+                        {{ etiqueta }}
+                    </option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit"
+                    class="bg-white text-gray-900 border border-gray-100 px-8 py-4 rounded-2xl font-black hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                    Filtrar
+                </button>
+            </form>
         </div>
 
-        <div class="space-y-4">
+        <div class="space-y-5">
             {% for evento in eventos %}
 
-            <div onclick="toggleDetalleEvento('{{ evento.id }}')"
-                class="bg-white group rounded-[2rem] p-4 pr-8 border border-gray-100 shadow-sm hover:shadow-xl transition-all border-l-8 border-l-green-500 cursor-pointer card-hover">
+            <div id="card-evento-{{ evento.id }}"
+                onclick="toggleDetalleEvento('{{ evento.id }}')"
+                class="event-card group rounded-[2rem] p-5 md:p-6 border border-gray-100 cursor-pointer card-hover relative z-0">
 
-                <div class="flex flex-col md:flex-row items-center gap-6">
+                <div class="flex flex-col xl:flex-row items-center gap-6">
 
                     <div
-                        class="w-24 h-24 bg-gray-900 rounded-3xl flex flex-col items-center justify-center text-white shrink-0 shadow-lg group-hover:bg-indigo-600 transition-colors">
-                        <span class="text-xs font-bold opacity-60 uppercase">
+                        class="w-24 h-24 bg-gray-950 rounded-3xl flex flex-col items-center justify-center text-white shrink-0 shadow-xl group-hover:bg-gradient-to-br group-hover:from-indigo-600 group-hover:to-pink-500 transition-all">
+                        <span class="text-xs font-black opacity-70 uppercase">
                             {{ evento.fecha_evento|date:"M" }}
                         </span>
-                        <span class="text-3xl font-black">
+                        <span class="text-4xl font-black leading-none">
                             {{ evento.fecha_evento|date:"d" }}
                         </span>
                     </div>
 
-                    <div class="flex-grow text-center md:text-left">
-                        <h4
-                            class="text-xl font-black text-gray-900 group-hover:text-indigo-600 transition-colors uppercase">
-                            {{ evento.nombre_evento }}
-                        </h4>
+                    <div class="flex-grow text-center xl:text-left">
+                        <div class="flex flex-col xl:flex-row xl:items-center gap-3 mb-2">
+                            <h4
+                                class="text-2xl font-black text-gray-950 group-hover:text-indigo-600 transition-colors uppercase">
+                                {{ evento.nombre_evento }}
+                            </h4>
 
-                        <p class="text-gray-500 font-medium mt-1">
+                            <span class="w-fit mx-auto xl:mx-0 bg-pink-50 text-pink-600 px-3 py-1 rounded-full text-[10px] font-black uppercase border border-pink-100">
+                                {{ evento.get_categoria_display }}
+                            </span>
+                        </div>
+
+                        <p class="text-gray-500 font-bold mt-1">
                             <i class="fa fa-map-marker-alt text-pink-500 mr-2"></i>
                             {{ evento.lugar }}
                         </p>
 
+                        <div class="mt-3 flex flex-wrap gap-2 justify-center xl:justify-start">
+                            <span class="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-xl text-[10px] font-black uppercase border border-emerald-100">
+                                ${{ evento.precio_persona }} por persona
+                            </span>
+
+                            <span class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-xl text-[10px] font-black uppercase border border-indigo-100">
+                                {{ evento.total_reservado|default:0 }} reservados
+                            </span>
+
+                            <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-xl text-[10px] font-black uppercase border border-gray-200">
+                                {{ evento.disponible|default_if_none:evento.cupo_maximo }} disponibles
+                            </span>
+                        </div>
+
                         <div
-                            class="mt-3 inline-flex items-center gap-2 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-lg shadow-sm"
+                            class="mt-4 inline-flex items-center gap-2 bg-white border border-indigo-100 px-4 py-2 rounded-2xl shadow-sm"
                             onclick="event.stopPropagation();">
-                            <span class="text-xs font-bold text-gray-500 uppercase tracking-widest mr-1">
-                                Código:
+                            <span class="text-xs font-black text-gray-400 uppercase tracking-widest">
+                                Código
                             </span>
                             <span id="codigo-evento-{{ evento.id }}"
                                 class="text-sm font-black text-indigo-600 font-mono tracking-widest">
@@ -193,7 +366,7 @@
                             </span>
                             <button type="button"
                                 onclick="copiarCodigoEvento('{{ evento.id }}')"
-                                class="w-7 h-7 flex items-center justify-center rounded-lg bg-white text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all"
+                                class="w-8 h-8 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all"
                                 title="Copiar código">
                                 <i class="fa fa-copy text-xs"></i>
                             </button>
@@ -201,7 +374,7 @@
 
                         {% if evento.servicios %}
                         <div class="mt-3">
-                            <span class="text-xs font-bold text-gray-500 uppercase tracking-widest mr-1">
+                            <span class="text-xs font-black text-gray-400 uppercase tracking-widest mr-1">
                                 Servicios:
                             </span>
                             <span class="text-sm font-black text-indigo-600">
@@ -211,54 +384,77 @@
                         {% endif %}
                     </div>
 
-                    <div class="flex flex-col items-center md:items-end gap-2 shrink-0">
-                        <p class="font-black text-gray-900 text-lg">
-                            {{ evento.total_reservado|default:0 }}
-                            <span class="text-gray-400 font-normal text-sm">
-                                / {{ evento.cupo_maximo }}
-                            </span>
-                        </p>
+                    <div class="w-full xl:w-60 shrink-0">
+                        <div class="bg-white/80 rounded-3xl p-5 border border-gray-100 shadow-sm">
+                            <div class="flex justify-between items-end mb-3">
+                                <div>
+                                    <p class="text-xs font-black text-gray-400 uppercase">
+                                        Ocupación
+                                    </p>
+                                    <p class="font-black text-gray-950 text-2xl">
+                                        {{ evento.porcentaje_ocupado|default:0 }}%
+                                    </p>
+                                </div>
 
-                        <p class="text-xs font-bold text-gray-400 uppercase">
-                            Disponibles: {{ evento.disponible|default_if_none:evento.cupo_maximo }}
-                        </p>
-
-                        <div class="w-48 h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-green-400 to-green-600"style=" width: {{ evento.porcentaje_ocupado|default:0 }}%;">
+                                <p class="font-black text-gray-900 text-lg">
+                                    {{ evento.total_reservado|default:0 }}
+                                    <span class="text-gray-400 font-bold text-sm">
+                                        / {{ evento.cupo_maximo }}
+                                    </span>
+                                </p>
                             </div>
+
+                            <div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-emerald-400 via-indigo-500 to-pink-500 rounded-full"style="width: {{ evento.porcentaje_ocupado|default:0 }}%;">
+                                </div>
+                            </div>
+
+                            <p class="text-xs font-bold text-gray-400 uppercase mt-3">
+                                Disponibles: {{ evento.disponible|default_if_none:evento.cupo_maximo }}
+                            </p>
                         </div>
                     </div>
 
-                    <div class="relative shrink-0" onclick="event.stopPropagation();">
+                    <div class="relative shrink-0 z-[9999]" onclick="event.stopPropagation();">
                         <button type="button" onclick="toggleMenuEvento('{{ evento.id }}')"
-                            class="w-12 h-12 bg-gray-50 text-gray-400 rounded-2xl hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center">
+                            class="w-12 h-12 bg-white text-gray-400 rounded-2xl hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center shadow-sm border border-gray-100">
                             <i class="fa fa-ellipsis-v"></i>
                         </button>
 
                         <div id="menu-evento-{{ evento.id }}"
-                            class="hidden absolute right-0 mt-2 w-52 bg-white border border-gray-100 rounded-2xl shadow-xl p-2 z-50">
+                            class="hidden absolute right-0 top-14 w-64 bg-white border border-gray-100 rounded-3xl shadow-2xl p-2 z-[99999]">
 
                             <a href="{% url 'detalle_y_reserva' evento.id %}"
-                                class="block px-4 py-3 rounded-xl text-sm font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">
-                                Consultar información
+                                class="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-black text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition">
+                                <i class="fa fa-eye w-4 text-center"></i>
+                                <span>Consultar información</span>
+                            </a>
+
+                            <a href="{% url 'estadisticas_evento' evento.id %}"
+                                class="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-black text-gray-700 hover:bg-green-50 hover:text-green-600 transition">
+                                <i class="fa fa-chart-pie w-4 text-center"></i>
+                                <span>Ver estadísticas</span>
                             </a>
 
                             <a href="{% url 'editar_evento' evento.id %}"
-                                class="block px-4 py-3 rounded-xl text-sm font-bold text-gray-700 hover:bg-yellow-50 hover:text-yellow-600">
-                                Editar evento
+                                class="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-black text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 transition">
+                                <i class="fa fa-pen w-4 text-center"></i>
+                                <span>Editar evento</span>
                             </a>
 
                             <button type="button" onclick="copiarCodigoEvento('{{ evento.id }}')"
-                                class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold text-gray-700 hover:bg-green-50 hover:text-green-600">
-                                Copiar código
+                                class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-black text-gray-700 hover:bg-green-50 hover:text-green-600 transition">
+                                <i class="fa fa-copy w-4 text-center"></i>
+                                <span>Copiar código</span>
                             </button>
 
                             <form method="POST" action="{% url 'eliminar_evento' evento.id %}">
                                 {% csrf_token %}
                                 <button type="submit"
-                                    onclick="return confirm('¿Seguro que quieres eliminar este evento? Esta acción no se puede deshacer.')"
-                                    class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold text-red-600 hover:bg-red-50">
-                                    Eliminar evento
+                                    onclick="return confirm('¿Seguro que quieres cancelar este evento? Se conservará el historial y sus reservaciones.')"
+                                    class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-black text-red-600 hover:bg-red-50 transition">
+                                    <i class="fa fa-ban w-4 text-center"></i>
+                                    <span>Cancelar evento</span>
                                 </button>
                             </form>
                         </div>
@@ -267,51 +463,86 @@
                 </div>
 
                 <div id="detalle-evento-{{ evento.id }}" class="hidden mt-6 border-t border-gray-100 pt-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
 
-                        <div class="bg-gray-50 p-4 rounded-2xl">
+                        <div class="bg-white/80 p-4 rounded-2xl border border-gray-100">
                             <p class="text-xs font-black text-gray-400 uppercase">Nombre del evento</p>
-                            <p class="text-gray-800 font-bold">
+                            <p class="text-gray-900 font-black">
                                 {{ evento.nombre_evento }}
                             </p>
                         </div>
 
-                        <div class="bg-gray-50 p-4 rounded-2xl">
+                        <div class="bg-white/80 p-4 rounded-2xl border border-gray-100">
                             <p class="text-xs font-black text-gray-400 uppercase">Fecha</p>
-                            <p class="text-gray-800 font-bold">
+                            <p class="text-gray-900 font-black">
                                 {{ evento.fecha_evento }}
                             </p>
                         </div>
 
-                        <div class="bg-gray-50 p-4 rounded-2xl">
+                        <div class="bg-white/80 p-4 rounded-2xl border border-gray-100">
                             <p class="text-xs font-black text-gray-400 uppercase">Lugar</p>
-                            <p class="text-gray-800 font-bold">
+                            <p class="text-gray-900 font-black">
                                 {{ evento.lugar }}
                             </p>
                         </div>
 
-                        <div class="bg-gray-50 p-4 rounded-2xl">
+                        <div class="bg-white/80 p-4 rounded-2xl border border-gray-100">
                             <p class="text-xs font-black text-gray-400 uppercase">Cupo máximo</p>
-                            <p class="text-gray-800 font-bold">
+                            <p class="text-gray-900 font-black">
                                 {{ evento.cupo_maximo }} personas
                             </p>
                         </div>
 
-                        <div class="bg-gray-50 p-4 rounded-2xl">
+                        <div class="bg-white/80 p-4 rounded-2xl border border-gray-100">
+                            <p class="text-xs font-black text-gray-400 uppercase">Total esperado</p>
+                            <p class="text-gray-900 font-black">
+                                ${{ evento.total_esperado }}
+                            </p>
+                        </div>
+
+                        <div class="bg-white/80 p-4 rounded-2xl border border-gray-100">
+                            <p class="text-xs font-black text-gray-400 uppercase">Total pagado</p>
+                            <p class="text-emerald-600 font-black">
+                                ${{ evento.total_pagado }}
+                            </p>
+                        </div>
+
+                        <div class="bg-white/80 p-4 rounded-2xl border border-gray-100">
+                            <p class="text-xs font-black text-gray-400 uppercase">Pendiente por cobrar</p>
+                            <p class="text-pink-600 font-black">
+                                ${{ evento.total_pendiente }}
+                            </p>
+                        </div>
+
+                        <div class="bg-white/80 p-4 rounded-2xl border border-gray-100">
+                            <p class="text-xs font-black text-gray-400 uppercase">Reservaciones pagadas</p>
+                            <p class="text-gray-900 font-black">
+                                {{ evento.reservaciones_pagadas_total }}
+                            </p>
+                        </div>
+
+                        <div class="bg-white/80 p-4 rounded-2xl border border-gray-100">
+                            <p class="text-xs font-black text-gray-400 uppercase">Reservaciones pendientes</p>
+                            <p class="text-gray-900 font-black">
+                                {{ evento.reservaciones_pendientes_total }}
+                            </p>
+                        </div>
+
+                        <div class="bg-white/80 p-4 rounded-2xl border border-gray-100">
                             <p class="text-xs font-black text-gray-400 uppercase">Lugares ocupados</p>
-                            <p class="text-gray-800 font-bold">
+                            <p class="text-gray-900 font-black">
                                 {{ evento.total_reservado|default:0 }} personas
                             </p>
                         </div>
 
-                        <div class="bg-gray-50 p-4 rounded-2xl">
+                        <div class="bg-white/80 p-4 rounded-2xl border border-gray-100">
                             <p class="text-xs font-black text-gray-400 uppercase">Lugares disponibles</p>
-                            <p class="text-gray-800 font-bold">
+                            <p class="text-gray-900 font-black">
                                 {{ evento.disponible|default:evento.cupo_maximo }} personas
                             </p>
                         </div>
 
-                        <div class="bg-gray-50 p-4 rounded-2xl">
+                        <div class="bg-white/80 p-4 rounded-2xl border border-gray-100">
                             <p class="text-xs font-black text-gray-400 uppercase">Código de invitación</p>
                             <div class="flex items-center gap-2 mt-1">
                                 <p class="text-indigo-600 font-black font-mono tracking-widest">
@@ -319,16 +550,16 @@
                                 </p>
                                 <button type="button"
                                     onclick="event.stopPropagation(); copiarCodigoEvento('{{ evento.id }}')"
-                                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-white text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all"
+                                    class="w-8 h-8 flex items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all"
                                     title="Copiar código">
                                     <i class="fa fa-copy text-xs"></i>
                                 </button>
                             </div>
                         </div>
 
-                        <div class="bg-gray-50 p-4 rounded-2xl">
+                        <div class="bg-white/80 p-4 rounded-2xl border border-gray-100 md:col-span-2 xl:col-span-3">
                             <p class="text-xs font-black text-gray-400 uppercase">Servicios</p>
-                            <p class="text-gray-800 font-bold">
+                            <p class="text-gray-900 font-black">
                                 {% if evento.servicios %}
                                 {{ evento.servicios }}
                                 {% else %}
@@ -339,9 +570,9 @@
 
                     </div>
 
-                    <div class="bg-gray-50 p-4 rounded-2xl mt-4">
+                    <div class="bg-white/80 p-5 rounded-2xl border border-gray-100 mt-4">
                         <p class="text-xs font-black text-gray-400 uppercase">Descripción</p>
-                        <p class="text-gray-700 mt-1">
+                        <p class="text-gray-700 mt-1 font-medium">
                             {% if evento.descripcion %}
                             {{ evento.descripcion }}
                             {% else %}
@@ -355,13 +586,15 @@
 
             {% empty %}
 
-            <div class="text-center py-10 bg-gray-50 rounded-3xl border border-dashed border-gray-300">
-                <i class="fa fa-calendar-times text-4xl text-gray-300 mb-4"></i>
-                <p class="text-gray-500 font-bold">
+            <div class="text-center py-14 bg-white/80 rounded-[2rem] border border-dashed border-gray-300 shadow-sm">
+                <div class="w-20 h-20 mx-auto rounded-3xl bg-gray-50 flex items-center justify-center mb-5">
+                    <i class="fa fa-calendar-times text-4xl text-gray-300"></i>
+                </div>
+                <p class="text-gray-600 font-black text-lg">
                     Aún no has organizado ningún evento.
                 </p>
-                <p class="text-sm text-gray-400">
-                    Crea tu primer evento.
+                <p class="text-sm text-gray-400 font-bold mt-1">
+                    Crea tu primer evento y empieza a llenar la pista.
                 </p>
             </div>
 
@@ -370,65 +603,90 @@
     </section>
 
     <section id="mis-asistencias" class="pt-10 border-t border-gray-100">
-        <div class="flex items-center gap-3 mb-8">
-            <div class="w-2 h-8 bg-pink-500 rounded-full"></div>
-            <h2 class="text-3xl font-black text-gray-800 tracking-tight">
-                Eventos a los que asistiré
-            </h2>
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-8">
+            <div>
+                <span class="text-xs font-black text-indigo-500 uppercase tracking-widest">
+                    Participación
+                </span>
+                <h2 class="text-3xl md:text-4xl font-black text-gray-900 tracking-tight mt-1">
+                    Eventos a los que asistiré
+                </h2>
+            </div>
         </div>
 
         {% if mis_reservaciones %}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             {% for reservacion in mis_reservaciones %}
             <div
-                class="bg-white p-6 rounded-[2rem] border border-gray-100 flex gap-5 hover:border-pink-200 transition-all group shadow-sm">
+                class="bg-white/90 p-6 rounded-[2rem] border border-gray-100 flex gap-5 hover:border-pink-200 transition-all group shadow-sm card-hover">
 
                 <div
-                    class="w-20 h-20 bg-pink-50 rounded-2xl flex flex-col items-center justify-center text-pink-500 shrink-0">
+                    class="w-20 h-20 bg-gradient-to-br from-pink-50 to-indigo-50 rounded-3xl flex flex-col items-center justify-center text-pink-500 shrink-0 border border-pink-100">
                     <span class="text-[10px] font-black uppercase">
                         {{ reservacion.evento.fecha_evento|date:"M" }}
                     </span>
-                    <span class="text-2xl font-black">
+                    <span class="text-3xl font-black leading-none">
                         {{ reservacion.evento.fecha_evento|date:"d" }}
                     </span>
                 </div>
 
                 <div class="flex flex-col justify-center flex-1">
-                    <h4 class="font-black text-gray-800 group-hover:text-pink-500 transition-colors uppercase">
+                    <h4 class="font-black text-gray-900 group-hover:text-pink-500 transition-colors uppercase text-lg">
                         {{ reservacion.evento.nombre_evento }}
                     </h4>
 
-                    <p class="text-sm text-gray-500 font-medium mt-1">
-                        <i class="fa fa-map-marker-alt mr-1"></i>
+                    <p class="text-sm text-gray-500 font-bold mt-1">
+                        <i class="fa fa-map-marker-alt mr-1 text-pink-500"></i>
                         {{ reservacion.evento.lugar }}
                     </p>
 
-                    <p class="text-sm text-gray-400 font-medium mt-1">
-                        <i class="fa fa-clock mr-1"></i>
-                        Llegada aprox: {{ reservacion.hora_reserva }}
-                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
+                        <p class="text-sm text-gray-500 font-bold">
+                            <i class="fa fa-clock mr-1 text-indigo-400"></i>
+                            {{ reservacion.hora_reserva }}
+                        </p>
 
-                    <p class="text-sm text-gray-400 font-medium mt-1">
-                        <i class="fa fa-users mr-1"></i>
-                        Invitados: {{ reservacion.numero_personas }}
-                    </p>
+                        <p class="text-sm text-gray-500 font-bold">
+                            <i class="fa fa-users mr-1 text-indigo-400"></i>
+                            Invitados: {{ reservacion.numero_personas }}
+                        </p>
 
-                    <div class="flex flex-wrap gap-2 mt-3">
+                        <p class="text-sm text-gray-500 font-bold">
+                            <i class="fa fa-tag mr-1 text-indigo-400"></i>
+                            {{ reservacion.get_estado_display }}
+                        </p>
+
+                        <p class="text-sm text-gray-900 font-black">
+                            <i class="fa fa-dollar-sign mr-1 text-emerald-500"></i>
+                            ${{ reservacion.total_reservacion }}
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        {% if not reservacion.evento.activo %}
+                        <span
+                            class="inline-block w-fit px-4 py-2 bg-red-50 text-red-600 text-[10px] font-black rounded-xl border border-red-100">
+                            EVENTO CANCELADO
+                        </span>
+                        {% endif %}
+
                         <a href="{% url 'detalle_y_reserva' reservacion.evento.id %}"
-                            class="inline-block w-fit px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded-lg hover:bg-indigo-600 hover:text-white transition-all">
+                            class="inline-block w-fit px-4 py-2 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded-xl hover:bg-indigo-600 hover:text-white transition-all">
                             VER EVENTO
                         </a>
 
+                        {% if reservacion.evento.activo %}
                         <a href="{% url 'editar_reservacion' reservacion.id %}"
-                            class="inline-block w-fit px-3 py-1 bg-yellow-50 text-yellow-600 text-[10px] font-black rounded-lg hover:bg-yellow-500 hover:text-white transition-all">
+                            class="inline-block w-fit px-4 py-2 bg-yellow-50 text-yellow-600 text-[10px] font-black rounded-xl hover:bg-yellow-500 hover:text-white transition-all">
                             EDITAR
                         </a>
+                        {% endif %}
 
                         <form method="POST" action="{% url 'cancelar_reservacion' reservacion.id %}"
                             onsubmit="return confirm('¿Seguro que deseas cancelar esta reservación?');">
                             {% csrf_token %}
                             <button type="submit"
-                                class="inline-block w-fit px-3 py-1 bg-red-50 text-red-600 text-[10px] font-black rounded-lg hover:bg-red-600 hover:text-white transition-all">
+                                class="inline-block w-fit px-4 py-2 bg-red-50 text-red-600 text-[10px] font-black rounded-xl hover:bg-red-600 hover:text-white transition-all">
                                 CANCELAR
                             </button>
                         </form>
@@ -439,12 +697,16 @@
             {% endfor %}
         </div>
         {% else %}
-        <div class="text-center py-10 bg-gray-50 rounded-3xl border border-dashed border-gray-300">
-            <i class="fa fa-ticket-alt text-4xl text-gray-300 mb-4"></i>
-            <p class="text-gray-500 font-bold">
+        <div class="text-center py-14 bg-white/80 rounded-[2rem] border border-dashed border-gray-300 shadow-sm">
+            <div class="w-20 h-20 mx-auto rounded-3xl bg-gray-50 flex items-center justify-center mb-5">
+                <i class="fa fa-ticket-alt text-4xl text-gray-300"></i>
+            </div>
+
+            <p class="text-gray-600 font-black text-lg">
                 Aún no tienes asistencias confirmadas.
             </p>
-            <p class="text-sm text-gray-400">
+
+            <p class="text-sm text-gray-400 font-bold mt-1">
                 Busca un evento por código y confirma tu asistencia.
             </p>
         </div>
@@ -453,14 +715,14 @@
 
 </main>
 
-<footer class="bg-white py-12 border-t border-gray-100">
+<footer class="bg-white/80 backdrop-blur py-12 border-t border-gray-100">
     <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
         <div class="flex flex-col items-center md:items-start gap-2">
             <span class="text-2xl font-black text-indigo-600 italic">
                 Bal<span class="text-pink-500">Nex</span>
             </span>
 
-            <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">
+            <p class="text-gray-400 text-xs font-black uppercase tracking-widest">
                 &copy; 2026 BalNex.
             </p>
         </div>
@@ -479,6 +741,8 @@
     </div>
 </footer>
 
+</div>
+
 <script>
     function toggleDetalleEvento(id) {
         const detalle = document.getElementById(`detalle-evento-${id}`);
@@ -490,6 +754,7 @@
 
     function toggleMenuEvento(id) {
         const menu = document.getElementById(`menu-evento-${id}`);
+        const card = document.getElementById(`card-evento-${id}`);
 
         document.querySelectorAll("[id^='menu-evento-']").forEach((item) => {
             if (item !== menu) {
@@ -497,8 +762,25 @@
             }
         });
 
-        if (menu) {
-            menu.classList.toggle("hidden");
+        document.querySelectorAll("[id^='card-evento-']").forEach((item) => {
+            if (item !== card) {
+                item.classList.remove("z-[9999]");
+                item.classList.add("z-0");
+            }
+        });
+
+        if (menu && card) {
+            const estaOculto = menu.classList.contains("hidden");
+
+            if (estaOculto) {
+                menu.classList.remove("hidden");
+                card.classList.remove("z-0");
+                card.classList.add("z-[9999]");
+            } else {
+                menu.classList.add("hidden");
+                card.classList.remove("z-[9999]");
+                card.classList.add("z-0");
+            }
         }
     }
 
@@ -529,7 +811,7 @@
         if (!aviso) {
             aviso = document.createElement("div");
             aviso.id = "aviso-codigo-copiado";
-            aviso.className = "fixed bottom-6 right-6 bg-gray-900 text-white px-5 py-3 rounded-2xl font-black shadow-xl z-[100]";
+            aviso.className = "fixed bottom-6 right-6 bg-gray-950 text-white px-5 py-3 rounded-2xl font-black shadow-2xl z-[99999]";
             document.body.appendChild(aviso);
         }
 
@@ -550,6 +832,11 @@
         if (!esMenu && !esBotonTresPuntos && !esDetalleEvento) {
             document.querySelectorAll("[id^='menu-evento-']").forEach((menu) => {
                 menu.classList.add("hidden");
+            });
+
+            document.querySelectorAll("[id^='card-evento-']").forEach((card) => {
+                card.classList.remove("z-[9999]");
+                card.classList.add("z-0");
             });
         }
     });

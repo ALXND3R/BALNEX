@@ -9,6 +9,7 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'app.css' %}" rel="stylesheet">
     
     {% block extra_css %}{% endblock %}
 </head>
@@ -18,5 +19,39 @@
     {% endblock %}
 
     {% block extra_js %}{% endblock %}
+    <script>
+        document.addEventListener("input", function (event) {
+            const field = event.target;
+
+            if (!(field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement)) {
+                return;
+            }
+
+            if (field.dataset.maxDigits) {
+                const maxDigits = Number(field.dataset.maxDigits);
+                const numericValue = field.value.replace(/[^\d.]/g, "");
+                const parts = numericValue.split(".");
+                const whole = parts[0].slice(0, maxDigits);
+                const decimals = parts.length > 1 ? "." + parts.slice(1).join("").slice(0, 2) : "";
+                field.value = whole + decimals;
+            }
+
+            if (field.maxLength > 0 && field.value.length > field.maxLength) {
+                field.value = field.value.slice(0, field.maxLength);
+            }
+        });
+
+        document.addEventListener("submit", function (event) {
+            const form = event.target;
+
+            if (!(form instanceof HTMLFormElement)) {
+                return;
+            }
+
+            form.querySelectorAll("input[type='text'], input[type='email'], input[type='search'], textarea").forEach((field) => {
+                field.value = field.value.trim();
+            });
+        });
+    </script>
 </body>
 </html>
